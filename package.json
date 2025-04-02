@@ -10,10 +10,11 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
+  "type": "module",
   "dependencies": {
     "dotenv": "^16.4.7",
     "express": "^5.1.0",
-    "mongose": "^0.0.2-security"
+    "mongose": "^0.0.2-security",
+    "pg": "^8.14.1"
   }
 }
