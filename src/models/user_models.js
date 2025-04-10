@@ -33,7 +33,7 @@ const find_user_by_registration_id = async (registration_id) => {
             `SELECT * FROM public.users WHERE registration_id = :registration_id`,
             {
                 replacements: { registration_id: registration_id },
-                type: database.QueryTypes.SELECT
+                type: QueryTypes.SELECT
             }
         );
         
@@ -47,8 +47,20 @@ const find_user_by_registration_id = async (registration_id) => {
         throw new Error('Error finding user by registration ID');
     }
 }
+
+const find_user_by_email = async (email) => {
+    const user = await database.query(
+        `SELECT registration_id FROM public.users WHERE email = :email`,
+        {
+            replacements: { email: email },
+            type: QueryTypes.SELECT
+        }
+    );
+    return user[0];
+}
  
 export default {
     create_user, 
-    find_user_by_registration_id
+    find_user_by_registration_id,
+    find_user_by_email
 }

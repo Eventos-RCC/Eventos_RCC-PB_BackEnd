@@ -40,6 +40,12 @@ const creat_user = async (body) => {
         throw new Error('All fields are required');
     }
 
+    const verify_email_registration = await userModels.find_user_by_email(email);
+    if (verify_email_registration) {
+        logger.error('Email already registered');
+        throw new Error('Email already registered');
+    }
+
     const diocese_id = await dioceseModels.find_diocese_by_name(name_diocese);
     if (!diocese_id) {
         logger.error('Diocese not found');
