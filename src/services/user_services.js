@@ -51,16 +51,8 @@ const creat_user = async (body) => {
 
     const hashed_password = await bcrypt.hash(password, 10);
 
-    const user_rcc = await userModels.create_user(
-        registration_id,
-        name,
-        email,
-        hashed_password,
-        phone,
-        birth_formated,
-        diocese_id.diocese_id
-    );
-    if(!user_rcc || !user_rcc.registration_id || !user_rcc.niveluser) {
+    const user_rcc = await userModels.create_user(registration_id, name, email, hashed_password, phone, birth_formated, diocese_id.diocese_id);
+    if(!user_rcc) {
         throw new Error('Error Error creating user or missing required fields user');
     }
 

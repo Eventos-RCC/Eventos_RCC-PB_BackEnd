@@ -3,14 +3,14 @@ import { QueryTypes } from "sequelize";
 
 const find_diocese_by_name = async (name) => {
   try {
-    const result = await database.query(
+    const [result] = await database.query(
       `SELECT diocese_id FROM public.diocese WHERE name = :name`,
       {
         replacements: { name: name },
         type: QueryTypes.SELECT,
       }
     );
-    return result[0];
+    return result;
   } catch (error) {
     console.error("Error finding diocese by name:", error);
     throw new Error("Error finding diocese by name");
