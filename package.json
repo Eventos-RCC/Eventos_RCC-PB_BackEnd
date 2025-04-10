@@ -20,6 +20,9 @@
     "mongose": "^0.0.2-security",
     "pg": "^8.14.1",
     "pg-hstore": "^2.3.4",
+    "pino": "^9.6.0",
+    "pino-http": "^10.4.0",
+    "pino-pretty": "^13.0.0",
     "sequelize": "^6.37.7"
   }
 }
