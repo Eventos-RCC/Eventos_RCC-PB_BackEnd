@@ -1,3 +1,5 @@
+import logger from './logger.config.js';
+
 const generateRegistrationId = async (diocese_id) => {
     logger.info('Generating registration_id');
     try {

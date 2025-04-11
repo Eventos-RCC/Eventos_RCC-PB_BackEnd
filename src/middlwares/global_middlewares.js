@@ -1,6 +1,6 @@
 import userModels from '../models/user_models.js';
 import jwt from 'jsonwebtoken';
-import logger from '../logger/logger.config.js';
+import logger from '../utils/logger.config.js';
 
 const generateToken = async (registration_id, niveluser) => {
     logger.info(`Generating token`);
