@@ -1,7 +1,9 @@
+import logger from './logger.config.js';
+import userModels from '../models/user_models.js';
+
 const generateRegistrationId = async (diocese_id) => {
     logger.info('Generating registration_id');
     try {
-
         const randomPart = Math.floor(1000 + Math.random() * 9000).toString().trim();
         const dioceseIdPart = diocese_id.diocese_id.toString().trim();
         const registration_id = parseInt(`${randomPart}${dioceseIdPart}`);

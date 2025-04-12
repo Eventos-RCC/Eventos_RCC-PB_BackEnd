@@ -2,7 +2,7 @@ import userModels from '../models/user_models.js';
 import dioceseModels from '../models/diocese_models.js';
 import globalmiddleware from '../middlwares/global_middlewares.js';
 import bcrypt from 'bcrypt';
-import logger from '../logger/logger.config.js';
+import logger from '../utils/logger.config.js';
 import CustomError from '../utils/CustomError.js';
 import { generateRegistrationId, formatDateForDatabase } from '../utils/basicFunctions.js';
 
