@@ -4,16 +4,15 @@ import userModels from '../models/user_models.js';
 const generateRegistrationId = async (diocese_id) => {
     logger.info('Generating registration_id');
     try {
-
         const randomPart = Math.floor(1000 + Math.random() * 9000).toString().trim();
         const dioceseIdPart = diocese_id.diocese_id.toString().trim();
         const registration_id = parseInt(`${randomPart}${dioceseIdPart}`);
 
-        console.log('registration_id gerado:', registration_id);
         const existingUser = await userModels.find_user_by_registration_id(registration_id);
         if (existingUser) {
             return generateRegistrationId(diocese_id);
         }
+
         return registration_id;
 
     }catch (error) {
