@@ -1,5 +1,12 @@
 import logger from './logger.config.js';
 import userModels from '../models/user_models.js';
+import redis from '../models/userRedis.js';
+
+const generateCodeValdation = async () => {
+    logger.info('Generating code validation');
+    const randomPart = Math.floor(1000 + Math.random() * 900000).toString().trim();
+    return randomPart;
+ }
 
 const generateRegistrationId = async (diocese_id) => {
     logger.info('Generating registration_id');
@@ -26,7 +33,19 @@ const formatDateForDatabase = (dateString) => {
     return `${year}-${month}-${day}`; // Retorna no formato yyyy-mm-dd
 };
 
+const verify_code = async (email, code) =>
+{
+    const stored_code = await redis.getData('verification_code', email)
+    if (!stored_code) {
+        return false
+    }
+
+    return stored_code.code === code ? true : false
+}
+
 export {
     generateRegistrationId,
-    formatDateForDatabase
+    formatDateForDatabase,
+    generateCodeValdation,
+    verify_code
 }
