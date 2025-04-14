@@ -4,8 +4,8 @@ import userServices from "../services/user_services.js";
 const create_user = async (req, res) => {
     const body = req.body;
     try {
-        const creat_user = await userServices.initiateUserRegistration(body);
-        return res.status(201).send({ message: "Código Enviado para o email: ", creat_user });
+        const result = await userServices.initiateUserRegistration(body);
+        return res.status(201).send(result);
     } catch (err) { // Adicionado o parâmetro error
         const statusCode = err.statusCode || 500;
         return res.status(statusCode).send({ message: err.message });
@@ -14,10 +14,11 @@ const create_user = async (req, res) => {
 
 const CodeVerification = async (req, res) => {
     const body = req.body;
-    const {email} = req.params;
+    const { email } = body;
+    // const email = body.email; // para o front
     try {
-        const Verication_code = await userServices.confirmVerificationCodeAndCreateUser(body, email);
-        return res.status(200).send({message: "Código verificado com Sucesso. \nUsuário cadastrado: ", })
+        const Verication_code_and_create_user = await userServices.confirmVerificationCodeAndCreateUser(body, email);
+        return res.status(200).send(Verication_code_and_create_user);
     } catch (err) {
         const statusCode = err.statusCode || 500;
         return res.status(statusCode).send({ message: err.message})

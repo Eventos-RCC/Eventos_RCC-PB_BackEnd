@@ -32,14 +32,14 @@ const initiateUserRegistration = async (body) => {
     const registration_id = await generateRegistrationId(diocese_id);
     if (!registration_id) {
         logger.error('Error generating registration ID');
-        throw new CustomError('Error generating registration ID');
+        throw new CustomError('Error generating registration ID', 400);
     }
 
     const formattedBirthDate = formatDateForDatabase(birth_date);
 
     if (password.length > 20 || password.length < 6) {
         logger.error('Password must be between 6 and 20 characters');
-        throw new Error('Password must be between 6 and 20 characters', 400);
+        throw new CustomError('Password must be between 6 and 20 characters', 400);
     }
 
     const hashed_password = await bcrypt.hash(password, 10);
@@ -69,16 +69,30 @@ const initiateUserRegistration = async (body) => {
 
     logger.info('Verification code sent to email');
     const response = await emailUtils.sendCodeToEmail(email, verificationCodeSend)
+
+    return { message: "Código enviado para o email", email };
 }
 
 
 const confirmVerificationCodeAndCreateUser = async (body, email) => {
     logger.info('verifying code');
-    const { codeUser, review_code } = body;
+    const { codeUser, review_code: resendCode } = body;
 
-    if (!codeUser || !review_code) {
-        logger.error("aqui não");
-        throw new CustomError("", 400);
+    if (resendCode === true) {
+        const verificationCodeSend = await emailUtils.sendVerificationCodeToRedis(email);
+        if (!verificationCodeSend) {
+            logger.error('Error sending verification code');
+            throw new CustomError('Error sending verification code', 400);
+        }
+
+        logger.info('Verification code sent to email');
+        await emailUtils.sendCodeToEmail(email, verificationCodeSend)
+        return { message: "Código enviado para o email", email };
+    }
+
+    if (!codeUser) {
+        logger.error("Verification code is required");
+        throw new CustomError("Verification code is required", 400);
     }
 
     const isValid = await verify_code(email, codeUser);
@@ -89,8 +103,8 @@ const confirmVerificationCodeAndCreateUser = async (body, email) => {
     
     const cachedUserData = await redis.getData('User_data', email);
     if (!cachedUserData) {
-        logger.error('Os dados do usuário expiraram ou são inválidos.');
-        throw new CustomError('Os dados do usuário expiraram ou são inválidos.', 400);
+        logger.error('User data has expired or is invalid.');
+        throw new CustomError('User data has expired or is invalid.', 400);
     }
 
     const { name, password, phone, birth_date, diocese_id, registration_id } = cachedUserData;
@@ -109,6 +123,7 @@ const confirmVerificationCodeAndCreateUser = async (body, email) => {
 
     logger.info('User created successfully');
     return {
+        message: "Código verificado com Sucesso. Usuário cadastrado: ",
         user: {
             registration_id: createdUser.registration_id,
             name: createdUser.name,
