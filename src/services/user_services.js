@@ -8,9 +8,9 @@ import { generateRegistrationId, formatDateForDatabase } from '../utils/basicFun
 
 const creat_user = async (body) => {
     logger.info('Creating user');
-    const { name, email, password, phone, birth_date, name_diocese} = body;
+    const { name, email, password, phone, birthdate, diocese} = body;
 
-    if (!name || !email || !password || !phone || !birth_date || !name_diocese) {
+    if (!name || !email || !password || !phone || !birthdate || !diocese) {
         logger.error('All fields are required');
         throw new CustomError('All fields are required', 400);
     }
@@ -21,7 +21,7 @@ const creat_user = async (body) => {
         throw new CustomError('Email already registered', 409);
     }
 
-    const diocese_id = await dioceseModels.find_diocese_by_name(name_diocese);
+    const diocese_id = await dioceseModels.find_diocese_by_name(diocese);
     if (!diocese_id) {
         logger.error('Diocese not found');
         throw new CustomError('Diocese not found', 400);
@@ -33,7 +33,7 @@ const creat_user = async (body) => {
         throw new CustomError('Error generating registration ID');
     }
 
-    const birth_formated = formatDateForDatabase(birth_date);
+    const birth_formated = formatDateForDatabase(birthdate);
 
     if (password.length > 20 || password.length < 6) {
         logger.error('Password must be between 6 and 20 characters');
