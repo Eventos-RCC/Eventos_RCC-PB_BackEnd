@@ -4,9 +4,11 @@ import globalmiddleware from '../middlwares/global_middlewares.js';
 import bcrypt from 'bcrypt';
 import logger from '../utils/logger.config.js';
 import CustomError from '../utils/CustomError.js';
-import { generateRegistrationId, formatDateForDatabase } from '../utils/basicFunctions.js';
+import { generateRegistrationId, formatDateForDatabase, verify_code } from '../utils/basicFunctions.js';
+import redis from '../models/userRedis.js';
+import emailUtils from '../utils/emailUtils.js';
 
-const creat_user = async (body) => {
+const initiateUserRegistration = async (body) => {
     logger.info('Creating user');
     const { name, email, password, phone, birthdate, diocese} = body;
 
@@ -33,7 +35,7 @@ const creat_user = async (body) => {
         throw new CustomError('Error generating registration ID');
     }
 
-    const birth_formated = formatDateForDatabase(birthdate);
+    const formattedBirthDate = formatDateForDatabase(birthdate);
 
     if (password.length > 20 || password.length < 6) {
         logger.error('Password must be between 6 and 20 characters');
@@ -42,34 +44,101 @@ const creat_user = async (body) => {
 
     const hashed_password = await bcrypt.hash(password, 10);
 
-    const user_rcc = await userModels.create_user(registration_id, name, email, hashed_password, phone, birth_formated, diocese_id.diocese_id);
-    if (!user_rcc) {
+    const userDataToCache = {
+        name,
+        email,
+        password: hashed_password,
+        phone,
+        birth: formattedBirthDate,
+        diocese_id: diocese_id.diocese_id,
+        registration_id: registration_id,
+    };
+
+    logger.info('Saving data to Redis');
+    const cacheResult = await redis.dataSave('User_data', email, userDataToCache, 1200);
+    if (!cacheResult) {
+        logger.error('Error saving data to Redis');
+        throw new CustomError('Error saving data to Redis', 400);
+    }
+
+    const verificationCodeSend = await emailUtils.sendVerificationCodeToRedis(email);
+    if (!verificationCodeSend) {
+        logger.error('Error sending verification code');
+        throw new CustomError('Error sending verification code', 400);
+    }
+
+    logger.info('Verification code sent to email');
+    const response = await emailUtils.sendCodeToEmail(email, verificationCodeSend)
+
+    return { message: "Código enviado para o email", email };
+}
+
+
+const confirmVerificationCodeAndCreateUser = async (body, email) => {
+    logger.info('verifying code');
+    const { codeUser, review_code: resendCode } = body;
+
+    if (resendCode === true) {
+        const verificationCodeSend = await emailUtils.sendVerificationCodeToRedis(email);
+        if (!verificationCodeSend) {
+            logger.error('Error sending verification code');
+            throw new CustomError('Error sending verification code', 400);
+        }
+
+        logger.info('Verification code sent to email');
+        await emailUtils.sendCodeToEmail(email, verificationCodeSend)
+        return { message: "Código enviado para o email", email };
+    }
+
+    if (!codeUser) {
+        logger.error("Verification code is required");
+        throw new CustomError("Verification code is required", 400);
+    }
+
+    const isValid = await verify_code(email, codeUser);
+    if (!isValid) {
+        logger.error('Code Invalid');
+        throw new CustomError('Code Invalid', 400);
+    }
+    
+    const cachedUserData = await redis.getData('User_data', email);
+    if (!cachedUserData) {
+        logger.error('User data has expired or is invalid.');
+        throw new CustomError('User data has expired or is invalid.', 400);
+    }
+
+    const { name, password, phone, birth_date, diocese_id, registration_id } = cachedUserData;
+
+    const createdUser = await userModels.create_user(registration_id, name, email, password, phone, birth_date, diocese_id);
+    if (!createdUser) {
         logger.error('Error creating user or missing required fields user');
         throw new CustomError('Error Error creating user or missing required fields user', 400);
     }
 
-    const generateToken = await globalmiddleware.generateToken(user_rcc.registration_id, user_rcc.niveluser);
-    if (!generateToken) {
+    const token = await globalmiddleware.generateToken(createdUser.registration_id, createdUser.niveluser);
+    if (!token) {
         logger.error('Error generating token');
         throw new CustomError('Error generating token', 400);
     }
 
     logger.info('User created successfully');
     return {
+        message: "Código verificado com Sucesso. Usuário cadastrado: ",
         user: {
-            registration_id: user_rcc.registration_id,
-            name: user_rcc.name,
-            email: user_rcc.email,
-            phone: user_rcc.phone,
-            birth_date: user_rcc.birth_date,
-            diocese_id: user_rcc.diocese_id,
-            niveluser: user_rcc.niveluser
+            registration_id: createdUser.registration_id,
+            name: createdUser.name,
+            email: createdUser.email,
+            phone: createdUser.phone,
+            birth_date: createdUser.birth_date,
+            diocese_id: createdUser.diocese_id,
+            niveluser: createdUser.niveluser
         },
-        token: generateToken
+        token: token
     }
 }
 
 
 export default {
-    creat_user
+    initiateUserRegistration,
+    confirmVerificationCodeAndCreateUser
 }
