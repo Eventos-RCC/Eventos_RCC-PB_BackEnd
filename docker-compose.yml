@@ -4,9 +4,9 @@ services:
   postgresql-rcc:
     image: postgres:17.4
     ports:
-      - "porta do postgre"
+      - "5433:5432"
     volumes:
-      - data_rcc:expecificar_volume
+      - data_rcc:/var/lib/postgresql/data
     restart: always
     environment:
       POSTGRES_USER: ${DB_USER}

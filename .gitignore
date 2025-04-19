@@ -1,5 +1,3 @@
 node_modules/
 scripts/
 .env
-docker-compose.yml
-readme.md
