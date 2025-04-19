@@ -1,0 +1,46 @@
+version: '2.0'
+
+services:
+  postgresql-rcc:
+    image: postgres:17.4
+    ports:
+      - "porta do postgre"
+    volumes:
+      - data_rcc:expecificar_volume
+    restart: always
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    networks:
+      - rcc_network
+
+  redis-rcc:
+    image: redis:7.4.2
+    ports:
+      - "6379:6379"
+    restart: always
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+    networks:
+      - rcc_network
+
+  api-rcc:
+    container_name: eventos-rcc
+    build: ./
+    restart: always
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgresql-rcc
+      - redis-rcc
+    env_file:
+      - .env
+    networks:
+      - rcc_network
+
+volumes:
+  data_rcc:
+
+networks:
+  rcc_network:
