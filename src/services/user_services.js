@@ -1,12 +1,13 @@
 import userModels from '../models/user_models.js';
 import dioceseModels from '../models/diocese_models.js';
-import globalmiddleware from '../middlwares/global_middlewares.js';
+import globalmiddleware from '../middlewares/global_middlewares.js';
 import bcrypt from 'bcrypt';
 import logger from '../utils/logger.config.js';
 import CustomError from '../utils/CustomError.js';
-import { generateRegistrationId, formatDateForDatabase, verify_code } from '../utils/basicFunctions.js';
+import { generateRegistrationId, formatDateForDatabase } from '../utils/basicFunctions.js';
 import redis from '../models/userRedis.js';
 import emailUtils from '../utils/emailUtils.js';
+import { sendVerificationCodeToRedis,  verify_code } from '../utils/functionsToRedis.js';
 
 const initiateUserRegistration = async (body) => {
     logger.info('Creating user');
@@ -61,7 +62,7 @@ const initiateUserRegistration = async (body) => {
         throw new CustomError('Error saving data to Redis', 400);
     }
 
-    const verificationCodeSend = await emailUtils.sendVerificationCodeToRedis(email);
+    const verificationCodeSend = await sendVerificationCodeToRedis(email);
     if (!verificationCodeSend) {
         logger.error('Error sending verification code');
         throw new CustomError('Error sending verification code', 400);
@@ -76,10 +77,10 @@ const initiateUserRegistration = async (body) => {
 
 const confirmVerificationCodeAndCreateUser = async (body, email) => {
     logger.info('verifying code');
-    const { codeUser, review_code: resendCode } = body;
+    const { codeUser, resendCode } = body;
 
     if (resendCode === true) {
-        const verificationCodeSend = await emailUtils.sendVerificationCodeToRedis(email);
+        const verificationCodeSend = await sendVerificationCodeToRedis(email);
         if (!verificationCodeSend) {
             logger.error('Error sending verification code');
             throw new CustomError('Error sending verification code', 400);
@@ -97,8 +98,8 @@ const confirmVerificationCodeAndCreateUser = async (body, email) => {
 
     const isValid = await verify_code(email, codeUser);
     if (!isValid) {
-        logger.error('Code Invalid');
-        throw new CustomError('Code Invalid', 400);
+        logger.error('Invalid or inspired code');
+        throw new CustomError('Invalid or inspired code', 400);
     }
     
     const cachedUserData = await redis.getData('User_data', email);
@@ -107,15 +108,19 @@ const confirmVerificationCodeAndCreateUser = async (body, email) => {
         throw new CustomError('User data has expired or is invalid.', 400);
     }
 
-    const { name, password, phone, birth_date, diocese_id, registration_id } = cachedUserData;
+    const { name, password, phone, birth, diocese_id, registration_id } = cachedUserData;
 
-    const createdUser = await userModels.create_user(registration_id, name, email, password, phone, birth_date, diocese_id);
+    const createdUser = await userModels.create_user(registration_id, name, email, password, phone, birth, diocese_id);
     if (!createdUser) {
         logger.error('Error creating user or missing required fields user');
         throw new CustomError('Error Error creating user or missing required fields user', 400);
     }
 
-    const token = await globalmiddleware.generateToken(createdUser.registration_id, createdUser.niveluser);
+    await redis.delData('User_data', email);
+    await redis.delData('verification_code', email);
+
+    console.log(createdUser.email);
+    const token = await globalmiddleware.generateToken(createdUser.registration_id, createdUser.niveluser, createdUser.email);
     if (!token) {
         logger.error('Error generating token');
         throw new CustomError('Error generating token', 400);
@@ -129,7 +134,7 @@ const confirmVerificationCodeAndCreateUser = async (body, email) => {
             name: createdUser.name,
             email: createdUser.email,
             phone: createdUser.phone,
-            birth_date: createdUser.birth_date,
+            birth: createdUser.birth,
             diocese_id: createdUser.diocese_id,
             niveluser: createdUser.niveluser
         },
