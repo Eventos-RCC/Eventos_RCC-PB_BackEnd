@@ -19,7 +19,7 @@ const initiateUserRegistration = async (body) => {
     }
 
     const verify_email_registration = await userModels.find_user_by_email(email);
-    if (verify_email_registration) {
+    if (verify_email_registration && verify_email_registration.isActivity === true) {
         logger.error('Email already registered');
         throw new CustomError('Email already registered', 409);
     }
