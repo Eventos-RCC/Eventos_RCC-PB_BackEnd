@@ -25,7 +25,19 @@ const CodeVerification = async (req, res) => {
     }
 }
 
+const login = async (req, res) => {
+    const body = req.body;
+    try {
+        const result = await userServices.login(body);
+        return res.status(200).send(result);
+    }catch (err) {
+        const statusCode = err.statusCode || 500;
+        return res.status(statusCode).send({ message: err.message });
+    }
+}
+
 export default {
     create_user,
-    CodeVerification
+    CodeVerification,
+    login
 }
