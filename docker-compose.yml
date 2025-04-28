@@ -24,6 +24,8 @@ services:
       REDIS_PASSWORD: ${REDIS_PASSWORD}
     networks:
       - rcc_network
+    volumes:
+      - redis_data:/data
 
   api-rcc:
     container_name: eventos-rcc
@@ -38,9 +40,15 @@ services:
       - .env
     networks:
       - rcc_network
+    volumes:
+      - ./app:/app
+      - /app/node_modules
+    environment:
+      - CHOKIDAR_USEPOLLING=true
 
 volumes:
   data_rcc:
+  redis_data:
 
 networks:
   rcc_network:
