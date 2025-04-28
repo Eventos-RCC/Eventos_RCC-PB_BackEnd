@@ -50,7 +50,7 @@ const find_user_by_registration_id = async (registration_id) => {
 
 const find_user_by_email = async (email) => {
     const user = await database.query(
-        `SELECT registration_id FROM public.users WHERE email = :email`,
+        `SELECT * FROM public.users WHERE email = :email`,
         {
             replacements: { email: email },
             type: QueryTypes.SELECT

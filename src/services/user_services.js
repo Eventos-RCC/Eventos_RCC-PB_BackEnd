@@ -19,7 +19,7 @@ const initiateUserRegistration = async (body) => {
     }
 
     const verify_email_registration = await userModels.find_user_by_email(email);
-    if (verify_email_registration) {
+    if (verify_email_registration && verify_email_registration.isActivity === true) {
         logger.error('Email already registered');
         throw new CustomError('Email already registered', 409);
     }
@@ -119,8 +119,9 @@ const confirmVerificationCodeAndCreateUser = async (body, email) => {
     await redis.delData('User_data', email);
     await redis.delData('verification_code', email);
 
-    console.log(createdUser.email);
-    const token = await globalmiddleware.generateToken(createdUser.registration_id, createdUser.niveluser, createdUser.email);
+    console.log(createdUser.registration_id);
+    console.log(registration_id)
+    const token = await globalmiddleware.generateToken(createdUser.registration_id, createdUser.niveluser, email);
     if (!token) {
         logger.error('Error generating token');
         throw new CustomError('Error generating token', 400);
@@ -142,8 +143,43 @@ const confirmVerificationCodeAndCreateUser = async (body, email) => {
     }
 }
 
+const login = async (body) => {
+    logger.info('Logging in user');
+    const { email, password } = body;
+
+    if (!email || !password) {
+        logger.error('Email and password are required');
+        throw new CustomError('Email and password are required', 400);
+    }
+
+    const user = await userModels.find_user_by_email(email);
+    if (!user || user.isActivity === false) {
+        logger.error('User not found');
+        throw new CustomError('User not found', 404);
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+        logger.error('Email or password is incorrect');
+        throw new CustomError('Email or password is incorrect', 401);
+    }
+
+    const token = await globalmiddleware.generateToken(user.registration_id, user.niveluser, user.email);
+    if (!token) {
+        logger.error('Error generating token');
+        throw new CustomError('Error generating token', 400);
+    }
+
+    logger.info('User logged in successfully');
+    return {
+        message: "Login successful",
+        token: token
+    }
+}
+
 
 export default {
     initiateUserRegistration,
-    confirmVerificationCodeAndCreateUser
+    confirmVerificationCodeAndCreateUser,
+    login
 }
