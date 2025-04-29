@@ -23,7 +23,24 @@ const create_event = async (name, description, location, diocese_id, start_time,
     return result[0][0];
 }
 
+const find_All_events = async () => {
+    const response = await database.query(
+        `SELECT e.*, d.name AS diocese_name
+        FROM public.event e
+        JOIN public.diocese d ON e.diocese_id = d.diocese_id
+        WHERE isDeleted = false and isArchived = false;`,
+        {
+            type: QueryTypes.SELECT
+        }
+    );
+    if(!response || response.length === 0) {
+        return null; // No events found
+    }
+    return response;
+}
+
 
 export default {
     create_event,
+    find_All_events,
 }

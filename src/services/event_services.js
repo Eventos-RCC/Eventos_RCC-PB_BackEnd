@@ -51,8 +51,35 @@ const create_event = async (body) => {
     };
     
 }
+
+const find_All_events = async () => {
+    logger.info('Fetching all events');
+    const events = await eventModels.find_All_events();
+    if (!events) {
+        logger.error('No events found');
+        throw new CustomError('No events found', 404);
+    }
+
+    logger.info('Events fetched successfully');
+    return {
+        message: 'Events fetched successfully',
+        events: events.map(event => ({
+            id: event.event_id,
+            name: event.name,
+            description: event.description,
+            location: event.location,
+            cep: event.local_cep,
+            diocese_id: event.diocese_id,
+            diocese_name: event.diocese_name,
+            start_time: event.start_time,
+            end_time: event.end_time,
+            event_level: event.event_level,
+        }))
+    };
+}
  
 
 export default {
     create_event,
+    find_All_events,
 }
