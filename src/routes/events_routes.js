@@ -6,5 +6,6 @@ const eventRoute = Router();
 
 eventRoute.post('/events', globalMiddlewares.jwtRequired, globalMiddlewares.isMaster, eventController.createEvents);
 eventRoute.get('/events', globalMiddlewares.jwtRequired, eventController.getAllEvents);
+eventRoute.delete('/events', globalMiddlewares.jwtRequired, globalMiddlewares.isMaster, eventController.deleteEvent);
 
 export default eventRoute;

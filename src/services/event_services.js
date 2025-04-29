@@ -77,9 +77,30 @@ const find_All_events = async () => {
         }))
     };
 }
- 
+
+const deleteEvent = async (event_id) => {
+    logger.info('Deleting event');
+
+    const findEvent = await eventModels.find_event_by_id(event_id);
+    if (!findEvent || findEvent.isDeleted) {
+        logger.error('Event not found or already deleted');
+        throw new CustomError('Event not found or already deleted', 404);
+    }
+
+    const deletedEvent = await eventModels.deleteEvent(event_id);
+    if (!deletedEvent) {
+        logger.error('Error deleting event');
+        throw new CustomError('Error deleting event', 400);
+    }
+
+    logger.info('Event deleted successfully');
+    return {
+        message: 'Event deleted successfully'
+    };
+}
 
 export default {
     create_event,
     find_All_events,
+    deleteEvent,
 }

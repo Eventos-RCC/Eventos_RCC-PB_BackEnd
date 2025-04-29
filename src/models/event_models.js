@@ -39,8 +39,32 @@ const find_All_events = async () => {
     return response;
 }
 
+const deleteEvent = async (event_id) => {
+    const result = await database.query(
+        `UPDATE public.event SET isDeleted = true WHERE event_id = :event_id RETURNING *`,
+        {
+            replacements: { event_id: event_id },
+            type: QueryTypes.UPDATE
+        }
+    );
+    return result[0][0];
+}
+
+const find_event_by_id = async (event_id) => {
+    const result = await database.query(
+        `SELECT * FROM public.event WHERE event_id = :event_id`,
+        {
+            replacements: { event_id: event_id },
+            type: QueryTypes.SELECT
+        }
+    );
+    return result[0];
+}
+
 
 export default {
     create_event,
     find_All_events,
+    deleteEvent,
+    find_event_by_id
 }

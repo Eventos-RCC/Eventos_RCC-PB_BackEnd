@@ -24,7 +24,19 @@ const getAllEvents = async (req, res) => {
 }
 
 
+const deleteEvent = async (req, res) => { 
+    try {
+        const { event_id } = req.query;
+        return res.status(200).send(await eventServices.deleteEvent(event_id));
+    }catch (error) {
+        const statusCode = error.statusCode || 500;
+        return res.status(statusCode).send({ message: error.message });
+    }
+}
+
+
 export default {
     createEvents, 
-    getAllEvents
+    getAllEvents,
+    deleteEvent
 }
