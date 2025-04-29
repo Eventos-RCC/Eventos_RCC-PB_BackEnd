@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import userController from '../controllers/user_controller.js';
+import globalMiddlewares from '../middlewares/global_middlewares.js';
 
 const userRoute = Router();
 
