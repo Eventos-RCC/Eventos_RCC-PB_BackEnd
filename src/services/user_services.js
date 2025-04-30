@@ -19,7 +19,7 @@ const initiateUserRegistration = async (body) => {
     }
 
     const verify_email_registration = await userModels.find_user_by_email(email);
-    if (verify_email_registration && verify_email_registration.isActivity === true) {
+    if (verify_email_registration && verify_email_registration.isDeleted === false) {
         logger.error('Email already registered');
         throw new CustomError('Email already registered', 409);
     }
@@ -119,8 +119,6 @@ const confirmVerificationCodeAndCreateUser = async (body, email) => {
     await redis.delData('User_data', email);
     await redis.delData('verification_code', email);
 
-    console.log(createdUser.registration_id);
-    console.log(registration_id)
     const token = await globalmiddleware.generateToken(createdUser.registration_id, createdUser.niveluser, email);
     if (!token) {
         logger.error('Error generating token');
@@ -153,7 +151,7 @@ const login = async (body) => {
     }
 
     const user = await userModels.find_user_by_email(email);
-    if (!user || user.isActivity === false) {
+    if (!user || user.isDeleted === true) {
         logger.error('User not found');
         throw new CustomError('User not found', 404);
     }
