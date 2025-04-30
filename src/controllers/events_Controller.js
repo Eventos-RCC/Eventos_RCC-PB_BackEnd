@@ -34,9 +34,32 @@ const deleteEvent = async (req, res) => {
     }
 }
 
+const getEventById = async (req, res) => {
+    try {
+        const { event_id } = req.query;
+        const response = await eventServices.find_event_by_id(event_id);
+        return res.status(200).send(response);
+    } catch (error) {
+        const statusCode = error.statusCode || 500;
+        return res.status(statusCode).send({ message: error.message });
+    }
+}
+
+const updateEvent = async (req, res) => {
+    try {
+        const { event_id } = req.query;
+        const response = await eventServices.updateEvent(event_id, req.body);
+        return res.status(200).send(response);
+    } catch (error) {
+        const statusCode = error.statusCode || 500;
+        return res.status(statusCode).send({ message: error.message });
+    }
+}
 
 export default {
     createEvents, 
     getAllEvents,
-    deleteEvent
+    deleteEvent,
+    getEventById,
+    updateEvent
 }

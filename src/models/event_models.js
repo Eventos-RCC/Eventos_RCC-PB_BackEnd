@@ -52,7 +52,11 @@ const deleteEvent = async (event_id) => {
 
 const find_event_by_id = async (event_id) => {
     const result = await database.query(
-        `SELECT * FROM public.event WHERE event_id = :event_id`,
+        `SELECT e.*, d.name AS diocese_name
+         FROM public.event e
+         JOIN public.diocese d ON e.diocese_id = d.diocese_id
+         WHERE event_id = :event_id
+         AND isDeleted = false AND isArchived = false;`,
         {
             replacements: { event_id: event_id },
             type: QueryTypes.SELECT
@@ -61,10 +65,37 @@ const find_event_by_id = async (event_id) => {
     return result[0];
 }
 
+const updateEvent = async (event_id, data) => {
+    const setClause = Object.entries(data)
+        .map(([key, value], index) => `${key} = :${key}`)
+        .join(', ');
+    
+    await database.query(
+        `UPDATE public.event SET ${setClause} WHERE event_id = :event_id RETURNING *`,
+        {
+            replacements: { ...data, event_id: event_id },
+            type: QueryTypes.UPDATE
+        }
+    );
+
+    const result = await database.query(
+        `SELECT e.*, d.name AS diocese_name
+         FROM public.event e
+         JOIN public.diocese d ON e.diocese_id = d.diocese_id
+         WHERE e.event_id = :event_id`,
+        {
+            replacements: { event_id },
+            type: QueryTypes.SELECT
+        }
+    );
+
+    return result[0];
+}
 
 export default {
     create_event,
     find_All_events,
     deleteEvent,
-    find_event_by_id
+    find_event_by_id,
+    updateEvent
 }

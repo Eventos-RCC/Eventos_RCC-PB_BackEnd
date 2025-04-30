@@ -5,7 +5,10 @@ import eventController from '../controllers/events_Controller.js';
 const eventRoute = Router();
 
 eventRoute.post('/events', globalMiddlewares.jwtRequired, globalMiddlewares.isMaster, eventController.createEvents);
-eventRoute.get('/events', globalMiddlewares.jwtRequired, eventController.getAllEvents);
+eventRoute.get('/events/all', globalMiddlewares.jwtRequired, eventController.getAllEvents);
 eventRoute.delete('/events', globalMiddlewares.jwtRequired, globalMiddlewares.isMaster, eventController.deleteEvent);
+eventRoute.get('/events', globalMiddlewares.jwtRequired, eventController.getEventById);
+eventRoute.patch('/events', globalMiddlewares.jwtRequired, globalMiddlewares.isMaster, eventController.updateEvent);
+
 
 export default eventRoute;
