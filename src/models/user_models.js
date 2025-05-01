@@ -4,7 +4,7 @@ import { QueryTypes } from "sequelize";
 const create_user = async (registration, name, email, password, phone, birth_date, diocese_id,) => {
     
     try {
-        const [result] = await database.query(
+        const result = await database.query(
             `INSERT INTO public.users (registration_id, username, email, password, phone, birth_date, diocese_id)
             VALUES (:registration, :name, :email, :password, :phone, :birth_date, :diocese_id) RETURNING *`,
             {

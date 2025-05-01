@@ -51,37 +51,40 @@ Este repositório contém o **back-end** da aplicação de agendamento de evento
 Este projeto está sendo desenvolvido com dedicação e zelo pelos seguintes membros:
 
 ### 🛠️ Back-end:
-<div style="display: flex; justify-content: center; gap: 20px;">
-  <div align="center">
-    <img src="https://github.com/giiordanni.png" alt="giordanni" width="100">
-    <p>Giordanni Formiga</p>
-  </div>
-  <div align="center">
-    <img src="https://github.com/Luciano-Claudio.png" alt="Luciano" width="100">
-    <p>Luciano Cláudio</p>
-  </div>
-  <div align="center">
-    <img src="https://github.com/RogerCarvalhoUEPB.png" alt="Roger Carvalho" width="100">
-    <p>Roger Carvalho</p>
-  </div>
-</div>
-
+<table>
+  <tr>
+     <td align="center">
+      <img src="https://github.com/giiordanni.png" alt="Giordanni" width="150"><br>
+      <b>Giordanni</b>
+    </td>
+    <td align="center">
+      <img src="https://github.com/Luciano-Claudio.png" alt="Luciano" width="150"><br>
+      <b>Luciano Cláudio</b>
+    </td>
+    <td align="center">
+      <img src="https://github.com/RogerCarvalhoUEPB.png" alt="Roger Carvalho" width="150"><br>
+      <b>Roger Carvalho</b>
+    </td>
+  </tr>
+</table>
 
 ### 🎨 Front-end:
-<div style="display: flex; justify-content: center; gap: 20px;">
-  <div align="center">
-    <img src="https://github.com/aldoalbuquerquejr.png" alt="giordanni" width="100">
-    <p>Aldo Albuquerque</p>
-  </div>
-  <div align="center">
-    <img src="https://github.com/HenriqueFMA.png" alt="Roger Carvalho" width="100">
-    <p>Henrique Fortunato</p>
-  </div>
-  <div align="center">
-    <img src="https://github.com/DanilloDevys.png" alt="Luciano" width="100">
-    <p>Danilo Devys</p>
-  </div>
-</div>
+<table>
+  <tr>
+    <td align="center">
+      <img src="https://github.com/aldoalbuquerquejr.png" alt="Aldo Albuquerque" width="150"><br>
+      <b>Aldo Albuquerque</b>
+    </td>
+    <td align="center">
+      <img src="https://github.com/HenriqueFMA.png" alt="Roger Carvalho" width="150"><br>
+      <b>Henrique Fortunato</b>
+    </td>
+    <td align="center">
+      <img src="https://github.com/DanilloDevys.png" alt="Danilo" width="150"><br>
+      <b>Danilo Devys</b>
+    </td>
+  </tr>
+</table>
 
 ---
 
