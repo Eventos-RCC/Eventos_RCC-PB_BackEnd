@@ -12,6 +12,8 @@ services:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: ${DB_NAME}
+    networks:
+      - net-rcc
 
   redis-rcc:
     image: redis:7.4.2
@@ -22,6 +24,8 @@ services:
       REDIS_PASSWORD: ${REDIS_PASSWORD}
     volumes:
       - redis_data:/data
+    networks:
+      - net-rcc
 
   api-rcc:
     container_name: eventos-rcc
@@ -39,7 +43,12 @@ services:
     environment:
       - CHOKIDAR_USEPOLLING=true
     command: npm run dev
+    networks:
+      - net-rcc
 
 volumes:
   data_rcc:
   redis_data:
+
+networks:
+  net-rcc:

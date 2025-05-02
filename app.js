@@ -2,8 +2,7 @@ import express from "express";
 import dotenv from "dotenv";
 import { conectDataBase } from "./src/database/db.js";
 import { connectRedis } from "./src/database/redis.js";
-import userRoutes from "./src/routes/user_routes.js";
-import eventsRoutes from "./src/routes/events_routes.js";
+import mainRouter from './src/routes/main_routes.js';
 
 
 dotenv.config();
@@ -14,7 +13,6 @@ connectRedis();
 
 app.use(express.json());
 
-app.use('/api', userRoutes);
-app.use('/api', eventsRoutes);
+app.use('/api', mainRouter);
 
 export default app;

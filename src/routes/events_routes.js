@@ -1,6 +1,6 @@
 import globalMiddlewares from '../middlewares/global_middlewares.js';
 import { Router } from 'express';
-import eventController from '../controllers/events_Controller.js';
+import eventController from '../controllers/events_controllers.js';
 
 const eventRoute = Router();
 
