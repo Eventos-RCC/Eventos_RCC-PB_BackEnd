@@ -28,7 +28,9 @@ class UserRepository {
                     model: Diocese,
                     as: 'diocese',
                     attributes: ['diocese_id', 'name']
-                }]
+                }],
+                raw: true,
+                nest: true
             });
             return user;
         } catch (error) {
@@ -44,7 +46,9 @@ class UserRepository {
                 include: [{
                     model: Diocese,
                     attributes: ['diocese_id', 'name']
-                }]
+                }],
+                raw: true,
+                nest: true
             });
             if (!user) {
                 throw new CustomError('User not found', 404);

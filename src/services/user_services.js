@@ -153,8 +153,9 @@ const login = async (body) => {
     throw new CustomError("Email and password are required", 400);
   }
 
-  const user = await User.find_user_by_email(email);
-  if (!user || user.isDeleted === true) {
+  const user = await userRepository.findUserByEmail(email);
+
+  if (!user) {
     logger.error("User not found");
     throw new CustomError("User not found", 404);
   }
