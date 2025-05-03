@@ -111,7 +111,7 @@ const confirmVerificationCodeAndCreateUser = async (body, email) => {
     throw new CustomError("User data has expired or is invalid.", 400);
   }
 
-  const { name, password, phone, birth, diocese_id, registration_id } =
+  const { name, password, phone, birth, diocese_id} =
     cachedUserData;
 
   const createdUser = await userRepository.createUser(name, email, password, phone, birth, diocese_id);
@@ -167,8 +167,8 @@ const login = async (body) => {
   }
 
   const token = await globalMiddleware.generateToken(
-    user.registration_id,
-    user.niveluser,
+    user.user_id,
+    user.level_user,
     user.email
   );
   if (!token) {

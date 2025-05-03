@@ -1,13 +1,13 @@
 import User from '../models/user_models.js';
+import Diocese from '../models/diocese_models.js';
+
 import CustomError from '../utils/CustomError.js';
 import logger from '../utils/logger.config.js';
-import Diocese from '../models/diocese_models.js';
 
 
 class UserRepository {
     async createUser(username, email, password, phone, birth_date, diocese_id) {
         try {
-            console.log('Dados para criação do usuário:', { username, email, password, phone, birth_date, diocese_id });
             return await User.create({username, email, password, phone, birth_date, diocese_id,});
         } catch (error) {
             console.log('Erro ao criar usuário:', error);
@@ -45,6 +45,7 @@ class UserRepository {
                 where: { status: 'active' },
                 include: [{
                     model: Diocese,
+                    as: 'diocese',
                     attributes: ['diocese_id', 'name']
                 }],
                 raw: true,

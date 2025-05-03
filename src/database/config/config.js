@@ -7,6 +7,7 @@ export default {
     url: process.env.POSTGRE_URL,
     dialect: "postgres",
     schema: 'rcc',
+    logging: false,
   },
   test: {
     url: process.env.DB_URL_TEST,

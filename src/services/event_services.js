@@ -1,52 +1,61 @@
+import userRepository from '../repositories/user_repository.js';
+import dioceseRepository from '../repositories/diocese_repository.js';
+import eventModels from '../repositories/events_repository.js';
+
 import logger from '../utils/logger.config.js';
 import CustomError from '../utils/CustomError.js';
-import eventModels from '../models/event_models.js';
-import dioceseModels from '../models/diocese_models.js';
+import events_repository from '../repositories/events_repository.js';
+
 
 const create_event = async (body) => {
-    const { name, description, location, diocese, start_time, end_time, event_level, master_id } = body;
+    logger.info('Creating event');
+    const { name, description, start_date, end_date, zip_code, location_name, event_type, status, registration_deadline, max_participants, diocese, user_created_id } = body;
 
-    if (!name || !description || !location || !diocese || !start_time || !end_time || !event_level || !master_id) {
+    if (!name || !location_name || !diocese || !start_date || !end_date || !event_type || !user_created_id) {
         logger.error('Missing required fields');
         throw new CustomError('Missing required fields', 400);
     }
 
-    if (start_time >= end_time) {
-        logger.error('Start time must be before end time');
-        throw new CustomError('Start time must be before end time', 400);
+    if (start_date >= end_date) {
+        logger.error('Start date must be before end time');
+        throw new CustomError('Start date must be before end time', 400);
     }
 
-    const diocese_id = await dioceseModels.find_diocese_by_name(diocese);
+    const diocese_id = await dioceseRepository.findDioceseByName(diocese);
     if (!diocese_id) {
         logger.error('Diocese not found');
         throw new CustomError('Diocese not found', 400);
     }
 
-
-    if (event_level.toLowerCase() !== 'diocesano' && event_level.toLowerCase() !== 'estadual' && event_level.toLowerCase() !== 'grupo_de_oracao') {
-        logger.error('Invalid event level');
-        throw new CustomError('Invalid event level', 400);
-    }
-
     logger.info('Creating event');
-    const creatingEvent = await eventModels.create_event(name, description, location, diocese_id.diocese_id, start_time, end_time, event_level, master_id);
+    const creatingEvent = await events_repository.createEvent(name, description, start_date, end_date, zip_code, location_name, event_type, status, registration_deadline, max_participants, diocese_id.diocese_id, user_created_id);
    
     if (!creatingEvent) {
         logger.error('Error creating event');
         throw new CustomError('Error creating event', 400);
     }
+
+    const userData = await userRepository.findUserById(user_created_id);
+    
     logger.info('Event created successfully');
     return {
         message: 'Event created successfully',
         event: {
-            id: creatingEvent.event_id,
+            id: creatingEvent.id,
             name: creatingEvent.name,
-            description: creatingEvent.description,
-            location: creatingEvent.location,
-            diocese_id: creatingEvent.diocese_id,
-            start_time: creatingEvent.start_time,
-            end_time: creatingEvent.end_time,
-            event_level: creatingEvent.event_level,
+            description: creatingEvent.description ? creatingEvent.description : "Descrição não informada",
+            location: creatingEvent.location_name ? creatingEvent.location_name : "Local não informado",
+            cep: creatingEvent.zip_code ? creatingEvent.zip_code : "CEP não informado",
+            diocese: creatingEvent.diocese_id,
+            type_event: creatingEvent.event_type,
+            start_date: creatingEvent.start_date,
+            end_date: creatingEvent.end_date,
+            status: creatingEvent.status,
+            registration_deadline: creatingEvent.registration_deadline ? creatingEvent.registration_deadline : "Prazo de inscrição não informado",
+            max_participants: creatingEvent.max_participants ? creatingEvent.max_participants : "Número máximo de participantes não informado",
+            criador: userData.username,
+            createdEvent: creatingEvent.created_at,
+            updatedEvent: creatingEvent.updated_at,
         }
     };
     

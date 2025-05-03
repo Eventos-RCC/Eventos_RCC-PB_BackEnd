@@ -4,15 +4,14 @@ import logger from '../utils/logger.config.js';
 
 class DioceseRepository {
     async findDioceseByName(name) {
-        console.log(name)
         try {
             const result = await Diocese.findOne({
                 where: {
                     name: name
                 },
-                attributes: ['diocese_id']
+                attributes: ['diocese_id'],
+                raw: true
             });
-            console.log("Resultado da busca:", result);
             return result;
         } catch (error) {
             logger.error(`Error finding diocese by name in repository: ${error.message}`);
