@@ -3,6 +3,11 @@ import { DataTypes, Model } from "sequelize";
 class User extends Model { 
     static init(connection) {
         super.init({
+            user_id: {
+                type: DataTypes.UUID,
+                defaultValue: DataTypes.UUIDV4,
+                primaryKey: true,
+            },
             username: DataTypes.STRING,
             email: DataTypes.STRING,
             password: DataTypes.STRING,

@@ -1,7 +1,7 @@
 import bcrypt from "bcrypt";
 import logger from "./logger.config.js";
 import CustomError from "./CustomError.js";
-import redis from "../models/user_redis.js";
+import redis from "../models/redis_models.js";
 import { generateCodeValdation } from "./basicFunctions.js";
 
 const sendVerificationCodeToRedis = async (email) => {

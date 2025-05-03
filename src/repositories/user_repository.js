@@ -5,10 +5,12 @@ import Diocese from '../models/diocese_models.js';
 
 
 class UserRepository {
-    async createUser(name, email, password, phone, birth_date, diocese_id) {
+    async createUser(username, email, password, phone, birth_date, diocese_id) {
         try {
-            return await User.create(name, email, password, phone, birth_date, diocese_id);
+            console.log('Dados para criação do usuário:', { username, email, password, phone, birth_date, diocese_id });
+            return await User.create({username, email, password, phone, birth_date, diocese_id,});
         } catch (error) {
+            console.log('Erro ao criar usuário:', error);
             logger.error('Error creating user:', error);
 
             if (error.name === 'SequelizeUniqueConstraintError') {
@@ -19,7 +21,6 @@ class UserRepository {
     }
     
     async findUserByEmail(email) {
-        console.log(email)
         try {
             const user = await User.findOne({
                 where: { email: email, status: 'active' },

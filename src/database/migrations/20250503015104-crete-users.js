@@ -6,7 +6,7 @@ export default {
     await queryInterface.createTable('users', {
       user_id: {
         type: Sequelize.UUID,
-        defaltValue: Sequelize.UUIDV4,
+        defaultValue: Sequelize.UUIDV4,
         allowNull: false,
         primaryKey: true,
         unique: true,

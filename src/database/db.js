@@ -1,5 +1,7 @@
 import dotenv from 'dotenv';
 import { Sequelize } from "sequelize";
+import User from '../models/user_models.js';
+import Diocese from '../models/diocese_models.js';
 
 dotenv.config();
 
@@ -22,5 +24,11 @@ const conectDataBase = async () => {
         console.log('Error connecting to database:', error);
     };
 };
+
+Diocese.init(database);
+User.init(database);
+
+Diocese.associate(database.models);
+User.associate(database.models);
 
 export { database, conectDataBase };

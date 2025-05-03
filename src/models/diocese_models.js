@@ -4,6 +4,11 @@ class Diocese extends Model {
   static init(connection) {
     super.init(
       {
+        diocese_id: {
+          type: DataTypes.INTEGER,
+          primaryKey: true,
+          autoIncrement: true,
+        },
         name: DataTypes.STRING,
       },
       {
