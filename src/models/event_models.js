@@ -18,6 +18,12 @@ class Events extends Model {
             max_participants: DataTypes.INTEGER,
             diocese_id: DataTypes.INTEGER,
             event_type_id: DataTypes.INTEGER,
+            status: {
+                type: DataTypes.ENUM,
+                values: ["active", "inactive", "archived", "deleted"],
+                defaultValue: "inactive",
+            },
+
         }, {
             sequelize,
             tableName: "events",
@@ -29,11 +35,15 @@ class Events extends Model {
     static associate(models) {
         this.belongsTo(models.TypeEvents, {
             foreignKey: "event_type_id",
-            as: "event_type",
+            as: "event_types",
         });
         this.belongsTo(models.Diocese, {
             foreignKey: "diocese_id",
             as: "diocese",
+        });
+        this.belongsTo(models.User, {
+            foreignKey: "created_by_user_id",
+            as: "users",
         });
     }
 }

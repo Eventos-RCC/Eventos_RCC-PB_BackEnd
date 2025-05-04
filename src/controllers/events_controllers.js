@@ -13,7 +13,7 @@ const createEvents = async (req, res) => {
 
 const getAllEvents = async (req, res) => {
     try {
-        const response = await eventServices.find_All_events();
+        const response = await eventServices.findAllEvents();
         return res.status(200).send(response);
     } catch (error) {
         const statusCode = error.statusCode || 500;

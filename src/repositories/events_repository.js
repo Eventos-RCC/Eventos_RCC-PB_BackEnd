@@ -7,10 +7,11 @@ import logger from '../utils/logger.config.js';
 import { Sequelize } from 'sequelize';
 
 class EventsRepository {
-    async createEvent(name, description, start_date, end_date, zip_code, location_name, event_type, status, registration_deadline, max_participants, diocese_id, user_created_id) {
+    async createEvent(name, description, start_date, end_date, event_type_id, diocese_id, created_by_user_id) {
         try {
-            console.log(name, description, start_date, end_date, zip_code, location_name, event_type, status, registration_deadline, max_participants, diocese_id, user_created_id)
-            return await Events.create({ name, description, start_date, end_date, zip_code, location_name, event_type, status, registration_deadline, max_participants, diocese_id, user_created_id })
+            const event = await Events.create({ name, description, start_date, end_date, event_type_id, diocese_id, created_by_user_id })
+            
+            return this.findEventById(event.id);
         } catch (error) {
             console.log('Erro ao criar evento:', error);
             logger.error('Error creating event:', error);
@@ -23,13 +24,15 @@ class EventsRepository {
 
     }
     
-    async findOrCreateEventType (typeEvent) {
+    async findTypeEvent(typeEvent) {
         try {
-            return await TypeEvents.findOrCreate({
+            return await TypeEvents.findOne({
                 where: Sequelize.where(
-                    Sequelize.fn('LOWER', Sequelize.col('name')),
+                    Sequelize.fn('LOWER', Sequelize.cast(Sequelize.col('name'), 'TEXT')),
                     typeEvent.toLowerCase()
                 ),
+                raw: true,
+                nest: true,
             })
         } catch (error) {
             logger.error(`Error finding event by type in repository: ${error.message}`);
@@ -42,24 +45,50 @@ class EventsRepository {
             return await Events.findAll({
                 include: [
                     {
-                        model: User,
-                        as: 'user_created',
-                        attributes: ['id', 'name', 'email'],
-                    },
-                    {
                         model: Diocese,
                         as: 'diocese',
-                        attributes: ['id', 'name'],
+                        attributes: ['diocese_id', 'name'],
                     },
                     {
                         model: TypeEvents,
-                        as: 'event_type',
+                        as: 'events',
                         attributes: ['id', 'name'],
                     },
                 ],
+                raw: true,
+                nest: true,
             });
-        }catch (error) {
+        } catch (error) {
             logger.error(`Error finding all events in repository: ${error.message}`);
+            throw new CustomError('Error accessing database', 500);
+        }
+    }
+
+    async findEventById(event_id) {
+        try {
+            return await Events.findByPk(event_id, {
+                include: [
+                    {
+                        model: Diocese,
+                        as: 'diocese',
+                        attributes: ['diocese_id', 'name'],
+                    },
+                    {
+                        model: TypeEvents,
+                        as: 'event_types',
+                        attributes: ['id', 'name'],
+                    },
+                    {
+                        model: User,
+                        as: 'users',
+                        attributes: ['user_id', 'username']
+                    }
+                ],
+                raw: true,
+                nest: true,
+            });
+        } catch (error) {
+            logger.error(`Error finding event by ID in repository: ${error.message}`);
             throw new CustomError('Error accessing database', 500);
         }
     }

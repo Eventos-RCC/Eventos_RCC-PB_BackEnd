@@ -9,9 +9,9 @@ import events_repository from '../repositories/events_repository.js';
 
 const create_event = async (body) => {
     logger.info('Creating event');
-    const { name, description, start_date, end_date, zip_code, location_name, event_type, status, registration_deadline, max_participants, diocese, user_created_id } = body;
+    const { name, description, start_date, end_date, event_type, diocese, user_created_id } = body;
 
-    if (!name || !location_name || !diocese || !start_date || !end_date || !event_type || !user_created_id) {
+    if (!name || !diocese || !start_date || !end_date || !event_type || !user_created_id) {
         logger.error('Missing required fields');
         throw new CustomError('Missing required fields', 400);
     }
@@ -27,43 +27,42 @@ const create_event = async (body) => {
         throw new CustomError('Diocese not found', 400);
     }
 
+    const event_type_id = await events_repository.findTypeEvent(event_type);
+    if (!event_type_id) {
+        logger.error('Event type not found');
+        throw new CustomError('Event type not found', 400);
+    }
+    
     logger.info('Creating event');
-    const creatingEvent = await events_repository.createEvent(name, description, start_date, end_date, zip_code, location_name, event_type, status, registration_deadline, max_participants, diocese_id.diocese_id, user_created_id);
-   
+    const creatingEvent = await events_repository.createEvent(name, description, start_date, end_date, event_type_id.id,  diocese_id.diocese_id, user_created_id);
     if (!creatingEvent) {
         logger.error('Error creating event');
         throw new CustomError('Error creating event', 400);
     }
 
-    const userData = await userRepository.findUserById(user_created_id);
-    
     logger.info('Event created successfully');
     return {
         message: 'Event created successfully',
         event: {
             id: creatingEvent.id,
             name: creatingEvent.name,
-            description: creatingEvent.description ? creatingEvent.description : "Descrição não informada",
-            location: creatingEvent.location_name ? creatingEvent.location_name : "Local não informado",
-            cep: creatingEvent.zip_code ? creatingEvent.zip_code : "CEP não informado",
-            diocese: creatingEvent.diocese_id,
-            type_event: creatingEvent.event_type,
+            description: creatingEvent.description,
+            diocese: creatingEvent.diocese.name,
+            type_event: creatingEvent.event_types.name,
             start_date: creatingEvent.start_date,
             end_date: creatingEvent.end_date,
             status: creatingEvent.status,
-            registration_deadline: creatingEvent.registration_deadline ? creatingEvent.registration_deadline : "Prazo de inscrição não informado",
-            max_participants: creatingEvent.max_participants ? creatingEvent.max_participants : "Número máximo de participantes não informado",
-            criador: userData.username,
-            createdEvent: creatingEvent.created_at,
-            updatedEvent: creatingEvent.updated_at,
+            criador: creatingEvent.users.username,
+            createdEvent: creatingEvent.createdAt,
+            updatedEvent: creatingEvent.updatedAt,
         }
     };
     
 }
 
-const find_All_events = async () => {
+const findAllEvents = async () => {
     logger.info('Fetching all events');
-    const events = await eventModels.find_All_events();
+    const events = await events_repository.findAllEvents();
     if (!events) {
         logger.error('No events found');
         throw new CustomError('No events found', 404);
@@ -72,18 +71,7 @@ const find_All_events = async () => {
     logger.info('Events fetched successfully');
     return {
         message: 'Events fetched successfully',
-        events: events.map(event => ({
-            id: event.event_id,
-            name: event.name,
-            description: event.description,
-            location: event.location,
-            cep: event.local_cep,
-            diocese_id: event.diocese_id,
-            diocese_name: event.diocese_name,
-            start_time: event.start_time,
-            end_time: event.end_time,
-            event_level: event.event_level,
-        }))
+        events: events
     };
 }
 
@@ -174,7 +162,7 @@ const updateEvent = async (event_id, body) => {
 
 export default {
     create_event,
-    find_All_events,
+    findAllEvents,
     deleteEvent,
     find_event_by_id,
     updateEvent

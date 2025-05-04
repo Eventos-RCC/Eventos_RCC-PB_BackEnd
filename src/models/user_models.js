@@ -31,6 +31,10 @@ class User extends Model {
             foreignKey: "diocese_id",
             as: "diocese"
         });
+        this.hasMany(models.Events, {
+            foreignKey: "created_by_user_id",
+            as: "events",
+        });
     }
 }
 

@@ -12,7 +12,8 @@ const database = new Sequelize(
         define: {
             timestamps: true,
             underscored: true,
-        }
+        },
+        logging: false,
     }
 );
 
