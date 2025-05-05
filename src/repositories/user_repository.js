@@ -1,5 +1,6 @@
 import User from '../models/user_models.js';
 import Diocese from '../models/diocese_models.js';
+import Adress from '../models/adresses_models.js';
 
 import CustomError from '../utils/CustomError.js';
 import logger from '../utils/logger.config.js';
@@ -28,6 +29,10 @@ class UserRepository {
                     model: Diocese,
                     as: 'diocese',
                     attributes: ['diocese_id', 'name']
+                },{
+                    model: Adress,
+                    as: 'adresses',
+                    attributes: ['id', 'street', 'number', 'city', 'state', 'zip_code', 'complement']
                 }],
                 raw: true,
                 nest: true
@@ -47,6 +52,10 @@ class UserRepository {
                     model: Diocese,
                     as: 'diocese',
                     attributes: ['diocese_id', 'name']
+                }, { 
+                    model: Adress,
+                    as: 'adresses',
+                    attributes: ['id', 'street', 'number', 'city', 'state', 'zip_code', 'complement']
                 }],
                 raw: true,
                 nest: true

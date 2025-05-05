@@ -35,6 +35,10 @@ class User extends Model {
             foreignKey: "created_by_user_id",
             as: "events",
         });
+        this.belongsTo(models.Adress, {
+            foreignKey: "adress_id",
+            as: "adresses"
+        });
     }
 }
 

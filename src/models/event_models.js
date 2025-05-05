@@ -12,12 +12,12 @@ class Events extends Model {
             description: DataTypes.STRING,
             start_date: DataTypes.DATEONLY,
             end_date: DataTypes.DATEONLY,
-            zip_code: DataTypes.STRING,
-            location_name: DataTypes.STRING,
             registration_deadline: DataTypes.DATEONLY,
             max_participants: DataTypes.INTEGER,
             diocese_id: DataTypes.INTEGER,
             event_type_id: DataTypes.INTEGER,
+            created_by_user_id: DataTypes.UUID,
+            adress_id: DataTypes.UUID,
             status: {
                 type: DataTypes.ENUM,
                 values: ["active", "inactive", "archived", "deleted"],
@@ -45,6 +45,10 @@ class Events extends Model {
             foreignKey: "created_by_user_id",
             as: "users",
         });
+        this.hasMany(models.Adress, {
+            foreignKey: "event_id",
+            as: "adresses"
+        })
     }
 }
 

@@ -98,7 +98,7 @@ const deleteEvent = async (event_id) => {
 
 const find_event_by_id = async (id_event) => {
     logger.info('Fetching event by ID');
-    const event = await eventModels.find_event_by_id(id_event);
+    const event = await eventModels.findEventById(id_event);
 
     if (!event) {
         logger.error('Event not found or already deleted');
