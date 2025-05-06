@@ -43,10 +43,10 @@ const getEventById = async (req, res) => {
     }
 }
 
-const updateEvent = async (req, res) => {
+const updateOrCreateAdressEvent = async (req, res) => {
     try {
-        const { event_id } = req.query;
-        const response = await eventServices.updateEvent(event_id, req.body);
+        const { event_id, adress_id } = req.query;
+        const response = await eventServices.updateOrCreateAdressEvent(event_id, adress_id, req.body);
         return res.status(200).send(response);
     } catch (error) {
         const statusCode = error.statusCode || 500;
@@ -59,5 +59,5 @@ export default {
     getAllEvents,
     deleteEvent,
     getEventById,
-    updateEvent
+    updateOrCreateAdressEvent
 }

@@ -28,8 +28,8 @@ class Adress extends Model {
     }
 
     static associate(models) {
-        this.hasMany(models.User, {
-            foreignKey: "adress_id",
+        this.belongsTo(models.User, {
+            foreignKey: "user_id",
             as: "users"
         });
         this.belongsTo(models.Events, {

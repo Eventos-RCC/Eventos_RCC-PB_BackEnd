@@ -17,7 +17,6 @@ class Events extends Model {
             diocese_id: DataTypes.INTEGER,
             event_type_id: DataTypes.INTEGER,
             created_by_user_id: DataTypes.UUID,
-            adress_id: DataTypes.UUID,
             status: {
                 type: DataTypes.ENUM,
                 values: ["active", "inactive", "archived", "deleted"],

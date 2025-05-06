@@ -8,6 +8,7 @@ import logger from '../utils/logger.config.js';
 import { Sequelize } from 'sequelize';
 
 class EventsRepository {
+
     async createEvent(name, description, start_date, end_date, event_type_id, diocese_id, created_by_user_id) {
         try {
             const event = await Events.create({ name, description, start_date, end_date, event_type_id, diocese_id, created_by_user_id })
@@ -43,7 +44,7 @@ class EventsRepository {
 
     async findAllEvents() {
         try {
-            return await Events.findAll({
+            const events =  await Events.findAll({
                 include: [
                     {
                         model: Diocese,
@@ -60,10 +61,19 @@ class EventsRepository {
                         as: 'adresses',
                         attributes: ['id', 'street', 'number', 'city', 'state', 'zip_code', 'complement'],
                     }
-                ],
-                raw: true,
-                nest: true,
+                ], 
+                where: {
+                    status: {
+                        [Sequelize.Op.ne]: 'deleted'
+                    }
+                }
             });
+
+            if(events.length === 0) {
+                return false;
+            }
+
+            return events;
         } catch (error) {
             logger.error(`Error finding all events in repository: ${error.message}`);
             throw new CustomError('Error accessing database', 500);
@@ -72,7 +82,7 @@ class EventsRepository {
 
     async findEventById(event_id) {
         try {
-            return await Events.findByPk(event_id, {
+            const events = await Events.findOne({
                 include: [
                     {
                         model: Diocese,
@@ -94,12 +104,56 @@ class EventsRepository {
                         as: 'adresses',
                         attributes: ['id', 'street', 'number', 'city', 'state', 'zip_code', 'complement'],
                     }
-                ],
-                raw: true,
-                nest: true,
+                ], 
+                where: {
+                    id: event_id,
+                    status: {
+                        [Sequelize.Op.ne]: 'deleted'
+                    }
+                }
             });
+
+            return events;
         } catch (error) {
             logger.error(`Error finding event by ID in repository: ${error.message}`);
+            throw new CustomError('Error accessing database', 500);
+        }
+    }
+
+    async deleteEvent(event_id) {
+        try {
+            return await Events.update({ status: 'deleted' }, {
+                where: { id: event_id },
+            })
+        } catch(error){
+            logger.error(`Error deleting event in repository: ${error.message}`);
+            throw new CustomError('Error deleting event', 500);
+        }
+    }
+
+    async updateOrCreateAdress(event_id, body, adress_id) {
+        const { street, number, city, state, zip_code, complement } = body;
+        try {
+            if (adress_id === undefined) {
+                const newAdress = await Adress.create({
+                    type_adress: 'events', event_id, street, number, city, state, zip_code, complement
+                });
+                return newAdress;
+            } else {
+                const [rowsUpdated, [updatedAdress]] = await Adress.update(
+                    { street, number, city, state, zip_code, complement },
+                    {
+                        where: { event_id: event_id, id:  adress_id},
+                        returning: true,
+                    }
+                );
+                if (rowsUpdated === 0) {
+                    throw new CustomError('Address not found for the given event ID', 404);
+                }
+                return updatedAdress;
+            }
+        } catch (error) {
+            logger.error(`Error updating or creating address in repository: ${error.message}`);
             throw new CustomError('Error accessing database', 500);
         }
     }

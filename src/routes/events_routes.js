@@ -8,7 +8,7 @@ eventRoute.post('/', globalMiddlewares.jwtRequired, globalMiddlewares.isMaster, 
 eventRoute.get('/all', globalMiddlewares.jwtRequired, eventController.getAllEvents);
 eventRoute.delete('/', globalMiddlewares.jwtRequired, globalMiddlewares.isMaster, eventController.deleteEvent);
 eventRoute.get('/', globalMiddlewares.jwtRequired, eventController.getEventById);
-eventRoute.patch('/', globalMiddlewares.jwtRequired, globalMiddlewares.isMaster, eventController.updateEvent);
+eventRoute.patch('/adress', globalMiddlewares.jwtRequired, globalMiddlewares.isMaster, eventController.updateOrCreateAdressEvent);
 
 
 export default eventRoute;

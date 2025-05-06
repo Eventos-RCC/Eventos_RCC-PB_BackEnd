@@ -1,6 +1,6 @@
 import userRepository from '../repositories/user_repository.js';
 import dioceseRepository from '../repositories/diocese_repository.js';
-import eventModels from '../repositories/events_repository.js';
+import eventRepository from '../repositories/events_repository.js';
 
 import logger from '../utils/logger.config.js';
 import CustomError from '../utils/CustomError.js';
@@ -78,13 +78,13 @@ const findAllEvents = async () => {
 const deleteEvent = async (event_id) => {
     logger.info('Deleting event');
 
-    const findEvent = await eventModels.find_event_by_id(event_id);
+    const findEvent = await eventRepository.findEventById(event_id);
     if (!findEvent) {
         logger.error('Event not found or already deleted');
         throw new CustomError('Event not found or already deleted', 404);
     }
 
-    const deletedEvent = await eventModels.deleteEvent(event_id);
+    const deletedEvent = await eventRepository.deleteEvent(event_id);
     if (!deletedEvent) {
         logger.error('Error deleting event');
         throw new CustomError('Error deleting event', 400);
@@ -98,7 +98,7 @@ const deleteEvent = async (event_id) => {
 
 const find_event_by_id = async (id_event) => {
     logger.info('Fetching event by ID');
-    const event = await eventModels.findEventById(id_event);
+    const event = await eventRepository.findEventById(id_event);
 
     if (!event) {
         logger.error('Event not found or already deleted');
@@ -108,62 +108,58 @@ const find_event_by_id = async (id_event) => {
     logger.info('Event fetched successfully');
     return {
         message: 'Event fetched successfully',
-        event: {
-            id: event.event_id,
-            name: event.name,
-            description: event.description,
-            location: event.location,
-            cep: event.local_cep,
-            diocese_id: event.diocese_id,
-            diocese_name: event.diocese_name,
-            start_time: event.start_time,
-            end_time: event.end_time,
-            event_level: event.event_level,
-        }
+        event
     };
 }
 
-const updateEvent = async (event_id, body) => {
-    logger.info('Updating event');
+const updateOrCreateAdressEvent = async (event_id, adress_id, body) => {
+    logger.info('Updating or creating address for event');
 
     if (Object.keys(body).length === 0) {
         logger.error('No fields provided for update');
         throw new CustomError('No fields provided for update', 400);
     }
 
-    if (body.start_time && body.end_time && body.start_time >= body.end_time) {
-        logger.error('Start time must be before end time');
-        throw new CustomError('Start time must be before end time', 400);
+    const event = await eventRepository.findEventById(event_id);
+    if (!event) {
+        logger.error('Event not found or already deleted');
+        throw new CustomError('Event not found or already deleted', 404);
     }
 
-    const updatedEvent = await eventModels.updateEvent(event_id, body);
-    if (!updatedEvent) {
-        logger.error('Error updating event');
-        throw new CustomError('Error updating event', 400);
+    const { street, number, city, state, zip_code, complement } = body;
+
+    let address;
+    if (!adress_id) {
+        if (!street || !number || !city || !state || !zip_code) {
+            logger.error('Missing required fields');
+            throw new CustomError('Missing required fields', 400);
+        }
+        address = await eventRepository.updateOrCreateAdress(event_id, body, adress_id);
+        logger.info('Address created successfully');
+    } else {
+        address = await eventRepository.updateOrCreateAdress(event_id, body, adress_id);
+        logger.info('Address updated successfully');
     }
 
-    logger.info('Event updated successfully');
     return {
-        message: 'Event updated successfully',
-        event: {
-            id: updatedEvent.event_id,
-            name: updatedEvent.name,
-            description: updatedEvent.description,
-            location: updatedEvent.location,
-            cep: updatedEvent.local_cep,
-            diocese_id: updatedEvent.diocese_id,
-            diocese_name: updatedEvent.diocese_name,
-            start_time: updatedEvent.start_time,
-            end_time: updatedEvent.end_time,
-            event_level: updatedEvent.event_level,
+        message: adress_id ? 'Address created successfully' : 'Address updated successfully',
+        address: {
+            id: address.id,
+            street: address.street,
+            number: address.number,
+            city: address.city,
+            state: address.state,
+            zip_code: address.zip_code,
+            complement: address.complement,
+            event_id: address.event_id
         }
     };
-}
+};
 
 export default {
     create_event,
     findAllEvents,
     deleteEvent,
     find_event_by_id,
-    updateEvent
+    updateOrCreateAdressEvent
 }
