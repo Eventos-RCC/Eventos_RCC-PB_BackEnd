@@ -4,7 +4,7 @@ import { QueryTypes } from "sequelize";
 const create_user = async (registration, name, email, password, phone, birth_date, diocese_id,) => {
     
     try {
-        const [result] = await database.query(
+        const result = await database.query(
             `INSERT INTO public.users (registration_id, username, email, password, phone, birth_date, diocese_id)
             VALUES (:registration, :name, :email, :password, :phone, :birth_date, :diocese_id) RETURNING *`,
             {
@@ -50,7 +50,7 @@ const find_user_by_registration_id = async (registration_id) => {
 
 const find_user_by_email = async (email) => {
     const user = await database.query(
-        `SELECT registration_id FROM public.users WHERE email = :email`,
+        `SELECT * FROM public.users WHERE email = :email`,
         {
             replacements: { email: email },
             type: QueryTypes.SELECT
