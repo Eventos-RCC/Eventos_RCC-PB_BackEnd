@@ -1,22 +1,31 @@
-import { database } from "../database/db.js";
-import { QueryTypes } from "sequelize";
+import { DataTypes, Model } from "sequelize";
 
-const find_diocese_by_name = async (name) => {
-  try {
-    const [result] = await database.query(
-      `SELECT diocese_id FROM public.diocese WHERE name = :name`,
+class Diocese extends Model {
+  static init(connection) {
+    super.init(
       {
-        replacements: { name: name },
-        type: QueryTypes.SELECT,
+        diocese_id: {
+          type: DataTypes.INTEGER,
+          primaryKey: true,
+          autoIncrement: true,
+        },
+        name: DataTypes.STRING,
+      },
+      {
+        sequelize: connection,
+        tableName: "dioceses",
+        schema: "rcc",
+        underscored: true,
       }
     );
-    return result;
-  } catch (error) {
-    console.error("Error finding diocese by name:", error);
-    throw new Error("Error finding diocese by name");
   }
-};
 
-export default {
-  find_diocese_by_name,
-};
+  static associate(models) {
+    this.hasMany(models.User, {
+      foreignKey: "diocese_id",
+      as: "diocese_users",
+    });
+  }
+}
+
+export default Diocese;

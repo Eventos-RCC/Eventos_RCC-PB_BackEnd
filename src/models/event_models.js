@@ -1,101 +1,83 @@
-import { database } from "../database/db.js";
-import { QueryTypes } from "sequelize";
+import { DataTypes, Model } from "sequelize";
 
-const create_event = async (name, description, location, diocese_id, start_time, end_time, event_level, master_id) => {
-
-    const result = await database.query(
-        `INSERT INTO public.event (name, description, location, diocese_id, start_time, end_time, event_level, master_id)
-        VALUES (:name, :description, :location, :diocese_id, :start_time, :end_time, :event_level, :master_id) RETURNING *`,
-        {
-            replacements: {
-                name: name,
-                description: description,
-                location: location,
-                diocese_id: diocese_id,
-                start_time: start_time,
-                end_time: end_time,
-                event_level: event_level,
-                master_id: master_id
+class Events extends Model {
+    static init(sequelize) {
+        super.init({
+            id: {
+                type: DataTypes.UUID,
+                defaultValue: DataTypes.UUIDV4,
+                primaryKey: true,
             },
-            type: QueryTypes.INSERT
-        }
-    );
-    return result[0][0];
-}
+            name: DataTypes.STRING,
+            description: DataTypes.STRING,
+            start_date: DataTypes.DATEONLY,
+            end_date: DataTypes.DATEONLY,
+            registration_deadline: DataTypes.DATEONLY,
+            max_participants: DataTypes.INTEGER,
+            diocese_id: DataTypes.INTEGER,
+            event_type_id: DataTypes.INTEGER,
+            created_by_user_id: DataTypes.UUID,
+            status: {
+                type: DataTypes.ENUM,
+                values: ["active", "inactive", "archived", "deleted"],
+                defaultValue: "inactive",
+            },
 
-const find_All_events = async () => {
-    const response = await database.query(
-        `SELECT e.*, d.name AS diocese_name
-        FROM public.event e
-        JOIN public.diocese d ON e.diocese_id = d.diocese_id
-        WHERE isDeleted = false and isArchived = false;`,
-        {
-            type: QueryTypes.SELECT
-        }
-    );
-    if(!response || response.length === 0) {
-        return null; // No events found
+        }, {
+            sequelize,
+            tableName: "events",
+            schema: "rcc",
+            underscored: true,
+        })
     }
-    return response;
+
+    static associate(models) {
+        this.belongsTo(models.TypeEvents, {
+            foreignKey: "event_type_id",
+            as: "event_types",
+        });
+        this.belongsTo(models.Diocese, {
+            foreignKey: "diocese_id",
+            as: "diocese",
+        });
+        this.belongsTo(models.User, {
+            foreignKey: "created_by_user_id",
+            as: "users",
+        });
+        this.hasMany(models.Adress, {
+            foreignKey: "event_id",
+            as: "adresses"
+        })
+    }
 }
 
-const deleteEvent = async (event_id) => {
-    const result = await database.query(
-        `UPDATE public.event SET isDeleted = true WHERE event_id = :event_id RETURNING *`,
-        {
-            replacements: { event_id: event_id },
-            type: QueryTypes.UPDATE
-        }
-    );
-    return result[0][0];
+
+class TypeEvents extends Model {
+    static init(sequelize) {
+        super.init({
+            id: {
+                type: DataTypes.INTEGER,
+                primaryKey: true,
+                autoIncrement: true,
+            },
+            name: DataTypes.STRING,
+            description: DataTypes.STRING,
+        }, {
+            sequelize,
+            tableName: "event_types",
+            schema: "rcc",
+            underscored: true,
+        })
+    }
+
+    static associate(models) {
+        this.hasMany(models.Events, {
+            foreignKey: "event_type_id",
+            as: "events",
+        });
+    }
+
 }
+ 
 
-const find_event_by_id = async (event_id) => {
-    const result = await database.query(
-        `SELECT e.*, d.name AS diocese_name
-         FROM public.event e
-         JOIN public.diocese d ON e.diocese_id = d.diocese_id
-         WHERE event_id = :event_id
-         AND isDeleted = false AND isArchived = false;`,
-        {
-            replacements: { event_id: event_id },
-            type: QueryTypes.SELECT
-        }
-    );
-    return result[0];
-}
-
-const updateEvent = async (event_id, data) => {
-    const setClause = Object.entries(data)
-        .map(([key, value], index) => `${key} = :${key}`)
-        .join(', ');
-    
-    await database.query(
-        `UPDATE public.event SET ${setClause} WHERE event_id = :event_id RETURNING *`,
-        {
-            replacements: { ...data, event_id: event_id },
-            type: QueryTypes.UPDATE
-        }
-    );
-
-    const result = await database.query(
-        `SELECT e.*, d.name AS diocese_name
-         FROM public.event e
-         JOIN public.diocese d ON e.diocese_id = d.diocese_id
-         WHERE e.event_id = :event_id`,
-        {
-            replacements: { event_id },
-            type: QueryTypes.SELECT
-        }
-    );
-
-    return result[0];
-}
-
-export default {
-    create_event,
-    find_All_events,
-    deleteEvent,
-    find_event_by_id,
-    updateEvent
-}
+export {Events, TypeEvents};

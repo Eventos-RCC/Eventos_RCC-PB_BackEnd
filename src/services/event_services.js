@@ -1,172 +1,190 @@
-import logger from '../utils/logger.config.js';
-import CustomError from '../utils/CustomError.js';
-import eventModels from '../models/event_models.js';
-import dioceseModels from '../models/diocese_models.js';
+import userRepository from '../repositories/user_repository.js';
+import dioceseRepository from '../repositories/diocese_repository.js';
 
-const create_event = async (body) => {
-    const { name, description, location, diocese, start_time, end_time, event_level, master_id } = body;
+import globalMiddleware from "../middlewares/global_middlewares.js";
+import bcrypt from "bcrypt";
+import logger from "../utils/logger.config.js";
+import CustomError from "../utils/CustomError.js";
+import { formatDateForDatabase } from "../utils/basicFunctions.js";
 
-    if (!name || !description || !location || !diocese || !start_time || !end_time || !event_level || !master_id) {
-        logger.error('Missing required fields');
-        throw new CustomError('Missing required fields', 400);
+import redis from "../models/redis_models.js";
+import emailUtils from "../utils/emailUtils.js";
+import { sendVerificationCodeToRedis, verify_code } from "../utils/functionsToRedis.js";
+
+
+const initiateUserRegistration = async (body) => {
+  logger.info("Initiating user registration process");
+  const { name, email, password, phone, birthdate, diocese } = body;
+
+  if (!name || !email || !password || !phone || !birthdate || !diocese) {
+    logger.error("All fields are required");
+    throw new CustomError("All fields are required", 400);
+  }
+
+  const existingUser = await userRepository.findUserByEmail(email);
+  if (existingUser) {
+    logger.error("Email already registered");
+    throw new CustomError("Email already registered", 409);
+  }
+
+  const diocese_id = await dioceseRepository.findDioceseByName(diocese);
+  if (!diocese_id) {
+    logger.error("Diocese not found");
+    throw new CustomError("Diocese not found", 400);
+  }
+  
+  const formattedBirthDate = formatDateForDatabase(birthdate);
+
+  if (password.length > 20 || password.length < 6) {
+    logger.error("Password must be between 6 and 20 characters");
+    throw new Error("Password must be between 6 and 20 characters", 400);
+  }
+
+  const hashed_password = await bcrypt.hash(password, 10);
+
+  const userDataToCache = {
+    name,
+    email,
+    password: hashed_password,
+    phone,
+    birth: formattedBirthDate,
+    diocese_id: diocese_id.diocese_id
+  };
+
+  logger.info("Saving data to Redis");
+  const cacheResult = await redis.dataSave(
+    "User_data",
+    email,
+    userDataToCache,
+    1200
+  );
+  if (!cacheResult) {
+    logger.error("Error saving data to Redis");
+    throw new CustomError("Error saving data to Redis", 400);
+  }
+
+  const verificationCodeSend = await sendVerificationCodeToRedis(email);
+  if (!verificationCodeSend) {
+    logger.error("Error sending verification code");
+    throw new CustomError("Error sending verification code", 400);
+  }
+
+  logger.info("Verification code sent to email");
+  await emailUtils.sendCodeToEmail(
+    email,
+    verificationCodeSend
+  );
+
+  return { message: "Código enviado para o email", email };
+};
+
+const confirmVerificationCodeAndCreateUser = async (body, email) => {
+  logger.info("verifying code");
+  const { codeUser, resendCode } = body;
+
+  if (resendCode === true) {
+    const verificationCodeSend = await sendVerificationCodeToRedis(email);
+    if (!verificationCodeSend) {
+      logger.error("Error sending verification code");
+      throw new CustomError("Error sending verification code", 400);
     }
 
-    if (start_time >= end_time) {
-        logger.error('Start time must be before end time');
-        throw new CustomError('Start time must be before end time', 400);
-    }
+    logger.info("Verification code sent to email");
+    await emailUtils.sendCodeToEmail(email, verificationCodeSend);
+    return { message: "Código enviado para o email", email };
+  }
 
-    const diocese_id = await dioceseModels.find_diocese_by_name(diocese);
-    if (!diocese_id) {
-        logger.error('Diocese not found');
-        throw new CustomError('Diocese not found', 400);
-    }
+  if (!codeUser) {
+    logger.error("Verification code is required");
+    throw new CustomError("Verification code is required", 400);
+  }
 
+  const isValid = await verify_code(email, codeUser);
+  if (!isValid) {
+    logger.error("Invalid or inspired code");
+    throw new CustomError("Invalid or inspired code", 400);
+  }
 
-    if (event_level.toLowerCase() !== 'diocesano' && event_level.toLowerCase() !== 'estadual' && event_level.toLowerCase() !== 'grupo_de_oracao') {
-        logger.error('Invalid event level');
-        throw new CustomError('Invalid event level', 400);
-    }
+  const cachedUserData = await redis.getData("User_data", email);
+  if (!cachedUserData) {
+    logger.error("User data has expired or is invalid.");
+    throw new CustomError("User data has expired or is invalid.", 400);
+  }
 
-    logger.info('Creating event');
-    const creatingEvent = await eventModels.create_event(name, description, location, diocese_id.diocese_id, start_time, end_time, event_level, master_id);
-   
-    if (!creatingEvent) {
-        logger.error('Error creating event');
-        throw new CustomError('Error creating event', 400);
-    }
-    logger.info('Event created successfully');
-    return {
-        message: 'Event created successfully',
-        event: {
-            id: creatingEvent.event_id,
-            name: creatingEvent.name,
-            description: creatingEvent.description,
-            location: creatingEvent.location,
-            diocese_id: creatingEvent.diocese_id,
-            start_time: creatingEvent.start_time,
-            end_time: creatingEvent.end_time,
-            event_level: creatingEvent.event_level,
-        }
-    };
-    
-}
+  const { name, password, phone, birth, diocese_id} =
+    cachedUserData;
 
-const find_All_events = async () => {
-    logger.info('Fetching all events');
-    const events = await eventModels.find_All_events();
-    if (!events) {
-        logger.error('No events found');
-        throw new CustomError('No events found', 404);
-    }
+  const createdUser = await userRepository.createUser(name, email, password, phone, birth, diocese_id);
+  if (!createdUser) {
+    logger.error("Error creating user or missing required fields user");
+    throw new CustomError(
+      "Error Error creating user or missing required fields user",
+      400
+    );
+  }
 
-    logger.info('Events fetched successfully');
-    return {
-        message: 'Events fetched successfully',
-        events: events.map(event => ({
-            id: event.event_id,
-            name: event.name,
-            description: event.description,
-            location: event.location,
-            cep: event.local_cep,
-            diocese_id: event.diocese_id,
-            diocese_name: event.diocese_name,
-            start_time: event.start_time,
-            end_time: event.end_time,
-            event_level: event.event_level,
-        }))
-    };
-}
+  await redis.delData("User_data", email);
+  await redis.delData("verification_code", email);
 
-const deleteEvent = async (event_id) => {
-    logger.info('Deleting event');
+  const token = await globalMiddleware.generateToken(
+    createdUser.user_id,
+    createdUser.level_user,
+    email
+  );
+  if (!token) {
+    logger.error("Error generating token");
+    throw new CustomError("Error generating token", 400);
+  }
 
-    const findEvent = await eventModels.find_event_by_id(event_id);
-    if (!findEvent) {
-        logger.error('Event not found or already deleted');
-        throw new CustomError('Event not found or already deleted', 404);
-    }
+  logger.info("User created successfully");
+  return {
+    message: "Código verificado com Sucesso. Usuário cadastrado: ",
+    user: createdUser,
+    token: token,
+  };
+};
 
-    const deletedEvent = await eventModels.deleteEvent(event_id);
-    if (!deletedEvent) {
-        logger.error('Error deleting event');
-        throw new CustomError('Error deleting event', 400);
-    }
+const login = async (body) => {
+  logger.info("Logging in user");
+  const { email, password } = body;
 
-    logger.info('Event deleted successfully');
-    return {
-        message: 'Event deleted successfully'
-    };
-}
+  if (!email || !password) {
+    logger.error("Email and password are required");
+    throw new CustomError("Email and password are required", 400);
+  }
 
-const find_event_by_id = async (id_event) => {
-    logger.info('Fetching event by ID');
-    const event = await eventModels.find_event_by_id(id_event);
+  const user = await userRepository.findUserByEmail(email);
 
-    if (!event) {
-        logger.error('Event not found or already deleted');
-        throw new CustomError('Event not found or already deleted', 404);
-    }
+  if (!user) {
+    logger.error("User not found");
+    throw new CustomError("User not found", 404);
+  }
 
-    logger.info('Event fetched successfully');
-    return {
-        message: 'Event fetched successfully',
-        event: {
-            id: event.event_id,
-            name: event.name,
-            description: event.description,
-            location: event.location,
-            cep: event.local_cep,
-            diocese_id: event.diocese_id,
-            diocese_name: event.diocese_name,
-            start_time: event.start_time,
-            end_time: event.end_time,
-            event_level: event.event_level,
-        }
-    };
-}
+  const isPasswordValid = await bcrypt.compare(password, user.password);
+  if (!isPasswordValid) {
+    logger.error("Email or password is incorrect");
+    throw new CustomError("Email or password is incorrect", 401);
+  }
 
-const updateEvent = async (event_id, body) => {
-    logger.info('Updating event');
+  const token = await globalMiddleware.generateToken(
+    user.user_id,
+    user.level_user,
+    user.email
+  );
+  if (!token) {
+    logger.error("Error generating token");
+    throw new CustomError("Error generating token", 400);
+  }
 
-    if (Object.keys(body).length === 0) {
-        logger.error('No fields provided for update');
-        throw new CustomError('No fields provided for update', 400);
-    }
-
-    if (body.start_time && body.end_time && body.start_time >= body.end_time) {
-        logger.error('Start time must be before end time');
-        throw new CustomError('Start time must be before end time', 400);
-    }
-
-    const updatedEvent = await eventModels.updateEvent(event_id, body);
-    if (!updatedEvent) {
-        logger.error('Error updating event');
-        throw new CustomError('Error updating event', 400);
-    }
-
-    logger.info('Event updated successfully');
-    return {
-        message: 'Event updated successfully',
-        event: {
-            id: updatedEvent.event_id,
-            name: updatedEvent.name,
-            description: updatedEvent.description,
-            location: updatedEvent.location,
-            cep: updatedEvent.local_cep,
-            diocese_id: updatedEvent.diocese_id,
-            diocese_name: updatedEvent.diocese_name,
-            start_time: updatedEvent.start_time,
-            end_time: updatedEvent.end_time,
-            event_level: updatedEvent.event_level,
-        }
-    };
-}
+  logger.info("User logged in successfully");
+  return {
+    message: "Login successful",
+    token: token,
+  };
+};
 
 export default {
-    create_event,
-    find_All_events,
-    deleteEvent,
-    find_event_by_id,
-    updateEvent
-}
+  initiateUserRegistration,
+  confirmVerificationCodeAndCreateUser,
+  login,
+};
