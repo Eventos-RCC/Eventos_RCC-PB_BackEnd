@@ -1,4 +1,4 @@
-version: '2.0'
+version: '3.8'
 
 services:
   postgre-rcc:
@@ -6,49 +6,40 @@ services:
     ports:
       - "5433:5432"
     volumes:
-      - data_rcc:/var/lib/postgresql/data
+      - ./postgre_data:/var/lib/postgresql/data
     restart: always
     environment:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: ${DB_NAME}
-    networks:
-      - net-rcc
 
   redis-rcc:
     image: redis:7.4.2
     ports:
       - "6379:6379"
     restart: always
-    environment:
-      REDIS_PASSWORD: ${REDIS_PASSWORD}
+    command: redis-server --requirepass ${REDIS_PASSWORD}
     volumes:
-      - redis_data:/data
-    networks:
-      - net-rcc
+      - ./redis_data:/data
 
-  api-rcc:
+  api-rcc-back:
     container_name: eventos-rcc
-    build: ./
-    restart: always
+    build: ./BackEnd
+    command: npm run dev
     ports:
       - "8000:8000"
     depends_on:
       - postgre-rcc
       - redis-rcc
     env_file:
-      - .env
+      - ./BackEnd/.env
     volumes:
-      - ./src:/app/src
+      - ./BackEnd:/usr/src/app
+      - /usr/src/app/node_modules
     environment:
       - CHOKIDAR_USEPOLLING=true
-    command: npm run dev
-    networks:
-      - net-rcc
 
+    
 volumes:
   data_rcc:
   redis_data:
-
-networks:
-  net-rcc:
