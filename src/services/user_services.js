@@ -101,8 +101,8 @@ const confirmVerificationCodeAndCreateUser = async (body, email) => {
 
   const isValid = await verify_code(email, codeUser);
   if (!isValid) {
-    logger.error("Invalid or inspired code");
-    throw new CustomError("Invalid or inspired code", 400);
+    logger.error("Invalid or expired code");
+    throw new CustomError("Invalid or expired code", 400);
   }
 
   const cachedUserData = await redis.getData("User_data", email);
