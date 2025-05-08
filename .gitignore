@@ -1,4 +1,4 @@
-node_modules/
+node_modules
 scripts/
 .env
 sequelize-common/node_modules/

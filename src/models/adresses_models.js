@@ -1,6 +1,5 @@
 import { DataTypes, Model } from "sequelize";
 
-
 class Adress extends Model {
     static init(connection) {
         super.init({
