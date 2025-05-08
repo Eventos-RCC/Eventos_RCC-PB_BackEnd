@@ -1,14 +1,14 @@
 import userRepository from '../repositories/user_repository.js';
 import dioceseRepository from '../repositories/diocese_repository.js';
 
-import globalMiddleware from "../middlewares/global_middlewares.js";
 import bcrypt from "bcrypt";
+import globalMiddleware from "../middlewares/global_middlewares.js";
+import redis from "../models/redis_models.js";
+
+import emailUtils from "../utils/emailUtils.js";
 import logger from "../utils/logger.config.js";
 import CustomError from "../utils/CustomError.js";
 import { formatDateForDatabase } from "../utils/basicFunctions.js";
-
-import redis from "../models/redis_models.js";
-import emailUtils from "../utils/emailUtils.js";
 import { sendVerificationCodeToRedis, verify_code } from "../utils/functionsToRedis.js";
 
 
