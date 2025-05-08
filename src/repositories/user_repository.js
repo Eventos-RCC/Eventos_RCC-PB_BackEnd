@@ -67,6 +67,32 @@ class UserRepository {
         }
     }
 
+    async updateOrCreateUserAdress(user_id, body, adress_id) {
+        const { street, number, city, state, zip_code, complement } = body;
+        try {
+            if (adress_id === undefined) {
+                const newAdress = await Adress.create({
+                    type_adress: 'users', user_id, street, number, city, state, zip_code, complement
+                });
+                return newAdress;
+            } else {
+                const [rowsUpdated, [updateUser]] = await User.update(
+                    { street, number, city, state, zip_code, complement },
+                    {
+                        where: { user_id: user_id, id: adress_id },
+                        returning: true
+                    }
+                );
+                if (rowsUpdated === 0) {
+                    throw new CustomError('Address not found for the given event ID', 404);
+                }
+            }
+        } catch (err) {
+            logger.error(`Error updating or creating address in repository: ${err.message}`);
+            throw new CustomError('Error accessing database', 500);
+        }
+    }
+
     async updateUser(userId, updateData) {
         try {
             const [updatedRows] = await User.update(updateData, {

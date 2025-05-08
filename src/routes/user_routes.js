@@ -8,5 +8,6 @@ userRoute.post('/', userController.create_user)
 userRoute.post('/verify-code', userController.CodeVerification)
 userRoute.post('/login', userController.login)
 userRoute.get('/me', userController.getUserData);
+userRoute.patch('/adress', userController.updateOrCreateaddress)
 
 export default userRoute;

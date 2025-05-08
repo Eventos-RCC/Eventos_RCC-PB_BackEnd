@@ -199,9 +199,55 @@ const findUserData = async (userId) => {
   }
 }
 
+const updateOrCreateAdress = async (user_id, adress_id, body) => {
+  logger.info('Updating or creating address for user');
+
+  if (Object.keys(body).length === 0) {
+    logger.error('No fields provided for update');
+    throw new CustomError('No fields provided for update', 400);
+  }
+
+  const user = await userRepository.findUserById(user_id);
+  if (!user) {
+    logger.error("User not found")
+    throw new CustomError('User not found', 404);
+  }
+
+  const { street, number, city, state, zip_code, complement } = body;
+
+  let address;
+  if (!adress_id) {
+    if (!street || !number || !city || !state || !zip_code) {
+      logger.error('Missing required fields');
+      throw new CustomError('Missing required fields', 400);
+    }
+
+    address = await userRepository.updateOrCreateUserAdress(user_id, body, adress_id);
+    logger.info("Address created successfully")
+  } else {
+    address = await userRepository.updateOrCreateUserAdress(user_id, body, adress_id);
+    logger.info("Address updated successfully")
+  }
+
+  return {
+    message: adress_id ? 'Address created successfully' : 'Address updated successfully',
+    addres: {
+      id: address.id,
+      street: address.street,
+      number: address.number,
+      city: address.city,
+      state: address.state,
+      zip_code: address.zip_code,
+      complement: address.complement,
+      event_id: address.event_id
+    }
+  }
+}
+
 export default {
   initiateUserRegistration,
   confirmVerificationCodeAndCreateUser,
   login,
-  findUserData
+  findUserData,
+  updateOrCreateAdress
 };
