@@ -7,6 +7,6 @@ const userRoute = Router();
 userRoute.post('/', userController.create_user)
 userRoute.post('/verify-code', userController.CodeVerification)
 userRoute.post('/login', userController.login)
-//userRoute.get('/me', userController.getUserData);
+userRoute.get('/me', userController.getUserData);
 
 export default userRoute;

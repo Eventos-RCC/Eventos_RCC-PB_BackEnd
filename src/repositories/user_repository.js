@@ -60,9 +60,6 @@ class UserRepository {
                 raw: true,
                 nest: true
             });
-            if (!user) {
-                throw new CustomError('User not found', 404);
-            }
             return user;
         } catch (error) {
             logger.error(`Error finding user by ID in repository: ${error.message}`);

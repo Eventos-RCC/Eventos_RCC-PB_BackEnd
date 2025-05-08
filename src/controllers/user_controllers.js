@@ -36,8 +36,20 @@ const login = async (req, res) => {
     }
 }
 
+const getUserData = async (req, res) => {
+    const userId = req.userId;
+    try {
+        const response = await userServices.findUserData(userId);
+        return res.status(200).send(response)
+    } catch (err){
+        const statusCode = err.statusCode || 500;
+        return res.status(statusCode).send({ message: err.message })
+    }
+}
+
 export default {
     create_user,
     CodeVerification,
-    login
+    login, 
+    getUserData
 }

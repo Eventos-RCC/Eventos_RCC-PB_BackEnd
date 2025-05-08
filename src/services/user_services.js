@@ -183,8 +183,25 @@ const login = async (body) => {
   };
 };
 
+const findUserData = async (userId) => {
+  logger.info("Fetching user by ID")
+
+  const user = await userRepository.findUserById(userId);
+  if (!user) {
+    logger.error("User not found")
+    throw new CustomError('User not found', 404);
+  }
+
+  logger.info("User fetched successfully")
+  return {
+    message: "ser fetched successfully",
+    user
+  }
+}
+
 export default {
   initiateUserRegistration,
   confirmVerificationCodeAndCreateUser,
   login,
+  findUserData
 };
