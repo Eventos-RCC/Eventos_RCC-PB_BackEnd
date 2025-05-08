@@ -1,66 +1,45 @@
-import {database} from '../database/db.js';
-import { QueryTypes } from "sequelize";
+import { DataTypes, Model } from "sequelize";
 
-const create_user = async (registration, name, email, password, phone, birth_date, diocese_id,) => {
-    
-    try {
-        const [result] = await database.query(
-            `INSERT INTO public.users (registration_id, username, email, password, phone, birth_date, diocese_id)
-            VALUES (:registration, :name, :email, :password, :phone, :birth_date, :diocese_id) RETURNING *`,
-            {
-                replacements: {
-                    registration: registration,
-                    name: name,
-                    email: email,
-                    password: password,
-                    phone: phone,
-                    birth_date: birth_date,
-                    diocese_id: diocese_id
-                },
-                type: QueryTypes.INSERT
-            }
-        );
-        return result[0];
-    } catch (error) {
-        console.error('Error creating user:', error);
-        throw new Error('Error creating user');
+class User extends Model { 
+    static init(connection) {
+        super.init({
+            user_id: {
+                type: DataTypes.UUID,
+                defaultValue: DataTypes.UUIDV4,
+                primaryKey: true,
+            },
+            username: DataTypes.STRING,
+            email: DataTypes.STRING,
+            password: DataTypes.STRING,
+            phone: DataTypes.STRING,
+            birth_date: DataTypes.DATEONLY,
+            level_user: {
+                type: DataTypes.ENUM,
+                values: ["master", "admin", "user"],
+                defaultValue: "user",
+            },
+        }, {
+            sequelize: connection,
+            tableName: "users",
+            schema: "rcc",
+            underscored: true,
+        });
+    }
+
+    static associate(models) {
+        this.belongsTo(models.Diocese, {
+            foreignKey: "diocese_id",
+            as: "diocese"
+        });
+        this.hasMany(models.Events, {
+            foreignKey: "created_by_user_id",
+            as: "events",
+        });
+        this.hasMany(models.Adress, {
+            foreignKey: "user_id",
+            as: "adresses"
+        });
     }
 }
 
-const find_user_by_registration_id = async (registration_id) => {
-    try {
-        const user = await database.query(
-            `SELECT * FROM public.users WHERE registration_id = :registration_id`,
-            {
-                replacements: { registration_id: registration_id },
-                type: QueryTypes.SELECT
-            }
-        );
-        
-        if (!user || user.length === 0) {
-            return null; // User not found
-        }
-
-        return user[0];
-    } catch (error) {
-        console.error('Error finding user by registration ID:', error);
-        throw new Error('Error finding user by registration ID');
-    }
-}
-
-const find_user_by_email = async (email) => {
-    const user = await database.query(
-        `SELECT registration_id FROM public.users WHERE email = :email`,
-        {
-            replacements: { email: email },
-            type: QueryTypes.SELECT
-        }
-    );
-    return user[0];
-}
- 
-export default {
-    create_user, 
-    find_user_by_registration_id,
-    find_user_by_email
-}
+export default User;
