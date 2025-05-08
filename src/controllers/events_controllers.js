@@ -2,9 +2,7 @@ import eventServices from '../services/event_services.js';
 
 const createEvents = async (req, res) => {
     try {
-
-        const userId = req.registration_id;
-        const response = await eventServices.create_event({ ...req.body, master_id: userId });
+        const response = await eventServices.create_event({ ...req.body, user_created_id: req.userId });
         
         return res.status(201).send(response)
     }catch (error) {
@@ -15,7 +13,7 @@ const createEvents = async (req, res) => {
 
 const getAllEvents = async (req, res) => {
     try {
-        const response = await eventServices.find_All_events();
+        const response = await eventServices.findAllEvents();
         return res.status(200).send(response);
     } catch (error) {
         const statusCode = error.statusCode || 500;
@@ -45,10 +43,10 @@ const getEventById = async (req, res) => {
     }
 }
 
-const updateEvent = async (req, res) => {
+const updateOrCreateAdressEvent = async (req, res) => {
     try {
-        const { event_id } = req.query;
-        const response = await eventServices.updateEvent(event_id, req.body);
+        const { event_id, adress_id } = req.query;
+        const response = await eventServices.updateOrCreateAdressEvent(event_id, adress_id, req.body);
         return res.status(200).send(response);
     } catch (error) {
         const statusCode = error.statusCode || 500;
@@ -61,5 +59,5 @@ export default {
     getAllEvents,
     deleteEvent,
     getEventById,
-    updateEvent
+    updateOrCreateAdressEvent
 }

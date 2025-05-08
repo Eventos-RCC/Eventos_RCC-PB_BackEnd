@@ -1,12 +1,14 @@
 FROM node:18-alpine
 
-WORKDIR /api
+WORKDIR /usr/src/app
 
-COPY . . 
+COPY package*.json ./
 
-RUN rm -rf node_modules
 RUN npm install 
+
+COPY . .
+
+EXPOSE 8000
 
 CMD ["npm", "start"]
 
-EXPOSE 8000
