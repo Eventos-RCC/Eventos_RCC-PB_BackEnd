@@ -5,36 +5,39 @@ import eventRepository from '../repositories/events_repository.js';
 import logger from '../utils/logger.config.js';
 import CustomError from '../utils/CustomError.js';
 import events_repository from '../repositories/events_repository.js';
+import { formatDateForDatabase} from '../utils/basicFunctions.js';
 
-
-const create_event = async (body) => {
+const createEvent = async (body) => {
     logger.info('Creating event');
-    const { name, description, start_date, end_date, event_type, diocese, user_created_id } = body;
+    const { name, description, startDate, endDate, eventType, diocese, userCreatedId } = body;
 
-    if (!name || !diocese || !start_date || !end_date || !event_type || !user_created_id) {
+    if (!name || !diocese || !startDate || !endDate || !eventType || !userCreatedId) {
         logger.error('Missing required fields');
         throw new CustomError('Missing required fields', 400);
     }
 
-    if (start_date >= end_date) {
+    if (startDate >= endDate) {
         logger.error('Start date must be before end time');
         throw new CustomError('Start date must be before end time', 400);
     }
 
-    const diocese_id = await dioceseRepository.findDioceseByName(diocese);
-    if (!diocese_id) {
+    const StartDateFormated = formatDateForDatabase(startDate);
+    const EndDateFormated = formatDateForDatabase(endDate);
+
+    const dioceseId = await dioceseRepository.findDioceseByName(diocese);
+    if (!dioceseId) {
         logger.error('Diocese not found');
         throw new CustomError('Diocese not found', 400);
     }
 
-    const event_type_id = await events_repository.findTypeEvent(event_type);
-    if (!event_type_id) {
+    const typeEventId = await events_repository.findTypeEvent(eventType);
+    if (!typeEventId) {
         logger.error('Event type not found');
         throw new CustomError('Event type not found', 400);
     }
     
     logger.info('Creating event');
-    const creatingEvent = await events_repository.createEvent(name, description, start_date, end_date, event_type_id.id,  diocese_id.diocese_id, user_created_id);
+    const creatingEvent = await events_repository.createEvent(name, description, StartDateFormated, EndDateFormated, typeEventId.id,  dioceseId.diocese_id, userCreatedId);
     if (!creatingEvent) {
         logger.error('Error creating event');
         throw new CustomError('Error creating event', 400);
@@ -96,7 +99,7 @@ const deleteEvent = async (event_id) => {
     };
 }
 
-const find_event_by_id = async (id_event) => {
+const findByIdEvent = async (id_event) => {
     logger.info('Fetching event by ID');
     const event = await eventRepository.findEventById(id_event);
 
@@ -126,11 +129,11 @@ const updateOrCreateAdressEvent = async (event_id, adress_id, body) => {
         throw new CustomError('Event not found or already deleted', 404);
     }
 
-    const { street, number, city, state, zip_code, complement } = body;
+    const { street, number, city, state, zipCode, complement } = body;
 
     let address;
     if (!adress_id) {
-        if (!street || !number || !city || !state || !zip_code) {
+        if (!street || !number || !city || !state || !zipCode) {
             logger.error('Missing required fields');
             throw new CustomError('Missing required fields', 400);
         }
@@ -157,9 +160,9 @@ const updateOrCreateAdressEvent = async (event_id, adress_id, body) => {
 };
 
 export default {
-    create_event,
+    createEvent,
     findAllEvents,
     deleteEvent,
-    find_event_by_id,
+    findByIdEvent,
     updateOrCreateAdressEvent
 }
