@@ -12,7 +12,7 @@ module.exports =  {
         unique: true
       },
       type_adress: {
-        type: Sequelize.ENUM('events', 'users'),
+        type: Sequelize.ENUM('events', 'users', 'prayer_group'),
         allowNull: false
       },
       event_id: {
@@ -41,7 +41,7 @@ module.exports =  {
       },
       number: {
         type: Sequelize.STRING,
-        allowNull: false
+        allowNull: true
       },
       city: {
         type: Sequelize.STRING,
