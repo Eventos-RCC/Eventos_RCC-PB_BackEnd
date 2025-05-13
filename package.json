@@ -8,8 +8,8 @@
     "dev": "node --watch index.js",
     "load-migration-docker": "docker exec -it eventos-rcc npx sequelize-cli db:migrate",
     "load-migration": "npx sequelize-cli db:migrate",
-    "create-migration": "npx sequelize-cli migration:generate --name",
-    "create-migration-docker": "docker exec -it eventos-rcc npx sequelize-cli migration:generate --name"
+    "create-migration": "npx sequelize-cli migration:create --name",
+    "create-migration-docker": "docker exec -it eventos-rcc npx sequelize-cli migration:create --name"
   },
   "keywords": [],
   "author": "",
