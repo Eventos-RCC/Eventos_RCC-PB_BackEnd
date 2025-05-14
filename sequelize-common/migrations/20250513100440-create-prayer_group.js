@@ -19,7 +19,7 @@ module.exports = {
         allowNull: true
       },
       diocese_id: {
-        type: Sequelize.UUID,
+        type: Sequelize.INTEGER,
         allowNull: false,
         references: {
           model: 'dioceses',
@@ -61,12 +61,12 @@ module.exports = {
       created_at: {
         type: Sequelize.DATE,
         allowNull: false,
-        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
+        defaultValue: Sequelize.fn('NOW')
       },
       updated_at: {
         type: Sequelize.DATE,
         allowNull: false,
-        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP')
+        defaultValue: Sequelize.fn('NOW')
       },
     }, { schema: 'rcc' });
   },

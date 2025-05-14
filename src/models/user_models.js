@@ -39,6 +39,11 @@ class User extends Model {
             foreignKey: "user_id",
             as: "adresses"
         });
+        this.belongsToMany(models.Ministery, {
+            through: 'user_ministeries',
+            foreignKey: "user_id",
+            as: "ministeries"
+        });
     }
 }
 
