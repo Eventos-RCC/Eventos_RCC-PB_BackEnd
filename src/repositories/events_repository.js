@@ -80,7 +80,7 @@ class EventsRepository {
         }
     }
 
-    async findEventById(event_id) {
+    async findEventById(eventId) {
         try {
             const events = await Events.findOne({
                 include: [
@@ -106,7 +106,7 @@ class EventsRepository {
                     }
                 ], 
                 where: {
-                    id: event_id,
+                    id: eventId,
                     status: {
                         [Sequelize.Op.ne]: 'deleted'
                     }
@@ -120,10 +120,10 @@ class EventsRepository {
         }
     }
 
-    async deleteEvent(event_id) {
+    async deleteEvent(eventId) {
         try {
             return await Events.update({ status: 'deleted' }, {
-                where: { id: event_id },
+                where: { id: eventId },
             })
         } catch(error){
             logger.error(`Error deleting event in repository: ${error.message}`);
@@ -131,10 +131,10 @@ class EventsRepository {
         }
     }
 
-    async updateOrCreateAdress(event_id, body, adress_id) {
+    async updateOrCreateAdress(event_id, body, adressId) {
         const { street, number, city, state, zip_code, complement } = body;
         try {
-            if (adress_id === undefined) {
+            if (adressId === undefined) {
                 const newAdress = await Adress.create({
                     type_adress: 'events', event_id, street, number, city, state, zip_code, complement
                 });
@@ -143,7 +143,7 @@ class EventsRepository {
                 const [rowsUpdated, [updatedAdress]] = await Adress.update(
                     { street, number, city, state, zip_code, complement },
                     {
-                        where: { event_id: event_id, id:  adress_id},
+                        where: { event_id: event_id, id:  adressId},
                         returning: true,
                     }
                 );

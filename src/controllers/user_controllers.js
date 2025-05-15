@@ -16,8 +16,8 @@ const CodeVerification = async (req, res) => {
     const body = req.body;
     const { email } = body;
     try {
-        const Verication_code_and_create_user = await userServices.confirmVerificationCodeAndCreateUser(body, email);
-        return res.status(200).send(Verication_code_and_create_user);
+        const VericationCodeAndCreatingUser = await userServices.confirmVerificationCodeAndCreateUser(body, email);
+        return res.status(200).send(VericationCodeAndCreatingUser);
     } catch (err) {
         const statusCode = err.statusCode || 500;
         return res.status(statusCode).send({ message: err.message})

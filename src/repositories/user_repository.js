@@ -11,7 +11,6 @@ class UserRepository {
         try {
             return await User.create({username, email, password, phone, birth_date, diocese_id,});
         } catch (error) {
-            console.log('Erro ao criar usuário:', error);
             logger.error('Error creating user:', error);
 
             if (error.name === 'SequelizeUniqueConstraintError') {
