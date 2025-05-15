@@ -1,10 +1,9 @@
 'use strict';
-const { v4: uuidv4 } = require('uuid');
 
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up (queryInterface, Sequelize) {
-    await queryInterface.createTable('ministeries', {
+    await queryInterface.createTable('roles', {
       id: {
         type: Sequelize.UUID,
         defaultValue: Sequelize.UUIDV4,
@@ -16,10 +15,9 @@ module.exports = {
         allowNull: false,
         unique: true
       },
-      abbreviation: {
+      description: {
         type: Sequelize.STRING,
-        allowNull: false,
-        unique: true
+        allowNull: false
       },
       created_at: {
         type: Sequelize.DATE,
@@ -34,7 +32,7 @@ module.exports = {
     }, { schema: 'rcc' })
   },
 
-  async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('ministeries', { schema: 'rcc' });
+  async down (queryInterface, Sequelize) {
+    await queryInterface.dropTable('roles', { schema: 'rcc' });
   }
 };
