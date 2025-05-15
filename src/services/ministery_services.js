@@ -17,6 +17,22 @@ const findAllMinisteries = async () => {
   }
 }
 
+const addUserToMinistery = async (userId, body) => { 
+  logger.info("Adding user to ministery");
+  const { mma, mcs, mf, mi, mocle, mp, mph, mfp, mj, mpf, mca, mmo, mrcc, ms, mur } = body;
+  
+  const ministereyUser = Object.entries(body)
+    .filter(([__, value]) => value === true)
+    .map(([key, value]) => ({ name: key, status: value }));
+  
+  if (ministereyUser.length === 0) {
+    logger.error("No ministery selected");
+    throw new CustomError("No ministery selected", 400);
+  }
+
+  await ministeryUser.addMinisteryToUser(userId, ministereyUser);
+}
+
 const findAllMinisteriesBrAbbreviation = async (abbreviation) => {
   logger.info("Fetching all ministeries with abbreviation");
 
