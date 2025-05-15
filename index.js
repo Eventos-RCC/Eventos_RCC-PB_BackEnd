@@ -8,6 +8,7 @@ const corsOptions = {
     optionsSuccessStatus: 200
 }
 
+
 app.use(cors(corsOptions));
 
 const port = process.env.PORT || 8001;
