@@ -13,11 +13,6 @@ class User extends Model {
             password: DataTypes.STRING,
             phone: DataTypes.STRING,
             birth_date: DataTypes.DATEONLY,
-            level_user: {
-                type: DataTypes.ENUM,
-                values: ["master", "admin", "user"],
-                defaultValue: "user",
-            },
         }, {
             sequelize: connection,
             tableName: "users",

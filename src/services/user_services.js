@@ -128,7 +128,6 @@ const confirmVerificationCodeAndCreateUser = async (body, email) => {
 
   const token = await globalMiddleware.generateToken(
     createdUser.user_id,
-    createdUser.level_user,
     email
   );
   if (!token) {
@@ -168,7 +167,6 @@ const login = async (body) => {
 
   const token = await globalMiddleware.generateToken(
     user.user_id,
-    user.level_user,
     user.email
   );
   if (!token) {
