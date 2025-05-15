@@ -6,6 +6,7 @@ import { Events, TypeEvents } from "../models/event_models.js";
 import Adress from "../models/adresses_models.js";
 import PrayerGroup from "../models/prayer_groups.js";
 import Ministery from "../models/ministery_models.js";
+import { Role, Permission, RolePermission, UserRole } from "../models/roles_models.js";
 
 dotenv.config();
 
@@ -34,6 +35,10 @@ TypeEvents.init(database);
 Adress.init(database);
 PrayerGroup.init(database);
 Ministery.init(database);
+Role.init(database);
+Permission.init(database);
+RolePermission.init(database);
+UserRole.init(database);
 
 Diocese.associate(database.models);
 User.associate(database.models);
@@ -42,5 +47,9 @@ TypeEvents.associate(database.models);
 Adress.associate(database.models);
 PrayerGroup.associate(database.models);
 Ministery.associate(database.models);
+Role.associate(database.models);
+Permission.associate(database.models);
+RolePermission.associate(database.models); 
+UserRole.associate(database.models);
 
 export { database, conectDataBase };

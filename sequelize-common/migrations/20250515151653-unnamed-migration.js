@@ -34,15 +34,18 @@ module.exports = {
       },
     }, { schema: 'rcc' });
 
-    await queryInterface.addIndex('permissions', ['action', 'resource'], {
-      unique: true,
-      name: 'idx_action_resource',
-      schema: 'rcc'
-    });
+    await queryInterface.addIndex(
+      { tableName: 'permissions', schema: 'rcc' },
+      ['action', 'resource'], {
+        unique: true,
+        name: 'idx_action_resource',
+      }
+    );
   },
 
   async down(queryInterface, Sequelize) {
-    await queryInterface.removeIndex('permissions', 'idx_action_resource', { schema: 'rcc' });
+    await queryInterface.removeIndex(
+      { tableName: 'permissions', schema: 'rcc' }, 'idx_action_resource');
     await queryInterface.dropTable('permissions', { schema: 'rcc' });
   }
 };

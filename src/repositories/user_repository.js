@@ -55,6 +55,18 @@ class UserRepository {
                     model: Adress,
                     as: 'adresses',
                     attributes: ['id', 'street', 'number', 'city', 'state', 'zip_code', 'complement']
+                    }, {
+                    model: 'roles',
+                    as: 'roles',
+                    attributes: ['id', 'name'],
+                    include: [
+                        {
+                            model: 'permissions',
+                            as: 'permissions',
+                            attributes: ['id', 'action', 'resource'],
+                            through: {attributes: []} // Exclui os atributos da tabela intermediária
+                        }
+                    ]
                 }],
                 raw: true,
                 nest: true

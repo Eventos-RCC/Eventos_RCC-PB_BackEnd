@@ -6,39 +6,39 @@ module.exports = {
     const dioceseData = [
       {
         name: 'Arquidiocese da Paraíba',
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        created_at: new Date(),
+        updated_at: new Date(),
       },
       {
         name: 'Diocese de Guarabira',
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        created_at: new Date(),
+        updated_at: new Date(),
       },
       {
         name: 'Diocese de Campina Grande',
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        created_at: new Date(),
+        updated_at: new Date(),
       },
       {
         name: 'Diocese de Patos',
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        created_at: new Date(),
+        updated_at: new Date(),
       },
       {
         name: 'Diocese de Cajazeiras',
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        created_at: new Date(),
+        updated_at: new Date(),
       },
       {
         name: 'Outra',
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        created_at: new Date(),
+        updated_at: new Date(),
       }
     ]
-    await queryInterface.bulkInsert('dioceses', dioceseData, { schema: 'rcc' });
+    await queryInterface.bulkInsert({tableName: 'dioceses', schema: 'rcc'}, dioceseData);
   },
 
   async down (queryInterface, Sequelize) {
-    await queryInterface.bulkDelete('dioceses', null, { schema: 'rcc' });
+    await queryInterface.bulkDelete({ tableName: 'dioceses', schema: 'rcc' }, null, {});
   }
 };

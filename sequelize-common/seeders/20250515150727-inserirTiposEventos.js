@@ -29,10 +29,10 @@ module.exports = {
         description: 'Seminário de Vida no Espírito Santo - Uma semana de SVES'
       }
     ]
-    await queryInterface.bulkInsert('event_types', eventTypes, { schema: 'rcc' });
+    await queryInterface.bulkInsert({ tableName: 'event_types', schema: 'rcc' }, eventTypes);
   },
 
   async down (queryInterface, Sequelize) {
-    await queryInterface.bulkDelete('event_types', null, { schema: 'rcc' });
+    await queryInterface.bulkDelete({tableName: 'event_types', schema: 'rcc' }, null, {});
   }
 };
