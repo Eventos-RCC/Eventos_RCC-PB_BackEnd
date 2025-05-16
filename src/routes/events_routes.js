@@ -10,6 +10,7 @@ eventRoute.get('/all', globalMiddlewares.jwtRequired, eventController.getAllEven
 eventRoute.delete('/', globalMiddlewares.jwtRequired, checkPermission("delete:event"), eventController.deleteEvent);
 eventRoute.get('/', globalMiddlewares.jwtRequired, eventController.getEventById);
 eventRoute.patch('/adress', globalMiddlewares.jwtRequired, checkPermission("update:event"), eventController.updateOrCreateAdressEvent);
+eventRoute.patch('/', globalMiddlewares.jwtRequired, checkPermission("update:event"), eventController.updateEventData);
 
 
 export default eventRoute;
