@@ -2,7 +2,7 @@ import eventServices from '../services/event_services.js';
 
 const createEvents = async (req, res) => {
     try {
-        const response = await eventServices.createEvent({ ...req.body, user_created_id: req.userId });
+        const response = await eventServices.createEvent({ ...req.body, userCreatedId: req.userId });
         
         return res.status(201).send(response)
     }catch (error) {

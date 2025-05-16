@@ -49,7 +49,7 @@ PrayerGroup.associate(database.models);
 Ministery.associate(database.models);
 Role.associate(database.models);
 Permission.associate(database.models);
-RolePermission.associate(database.models); 
-UserRole.associate(database.models);
+//RolePermission.associate(database.models); 
+//UserRole.associate(database.models);
 
 export { database, conectDataBase };

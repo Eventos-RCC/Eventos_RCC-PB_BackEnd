@@ -32,17 +32,8 @@ const jwtRequired = (req, res, next) => {
     }
 };
 
-// const isMaster = async (req, res, next) => {
-//     if (req.levelUser !== 'master') {
-//         logger.warn('Access denied. User is not a master.');
-//         return res.status(403).json({ message: 'Access denied. User not allowed to create events'});
-//     }
-//     next();
-// };
-
 
 export default {
     generateToken,
     jwtRequired,
-    isMaster
 }

@@ -26,6 +26,7 @@ const checkPermission = (requiredPermissionString) => {
 
             let hasPermission = false;
             for (const role of userWithPermission.roles) {
+    
                 if (role.permissions) {
                     for (const permission of role.permissions) {
                         if (permission.action === requiredAction && permission.resource === requiredResource) {
@@ -45,6 +46,9 @@ const checkPermission = (requiredPermissionString) => {
                 logger.warn(`User does not have permission: ${requiredPermissionString}`);
                 return next(new customError(`Access denied. You do not have permission: ${requiredPermissionString}`, 403));
             }
+
+            logger.info(`RBAC: Usuário ${userId} autorizado para ${requiredPermissionString}.`);
+            next();
            
         } catch (error) {
             logger.error(`Error checking permissions: ${error.message}`);

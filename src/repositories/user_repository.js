@@ -1,6 +1,7 @@
 import User from '../models/user_models.js';
 import Diocese from '../models/diocese_models.js';
 import Adress from '../models/adresses_models.js';
+import { Role, Permission } from '../models/roles_models.js';
 
 import CustomError from '../utils/CustomError.js';
 import logger from '../utils/logger.config.js';
@@ -55,21 +56,19 @@ class UserRepository {
                     model: Adress,
                     as: 'adresses',
                     attributes: ['id', 'street', 'number', 'city', 'state', 'zip_code', 'complement']
-                    }, {
-                    model: 'roles',
+                }, {
+                    model: Role,
                     as: 'roles',
                     attributes: ['id', 'name'],
                     include: [
                         {
-                            model: 'permissions',
+                            model: Permission,
                             as: 'permissions',
                             attributes: ['id', 'action', 'resource'],
                             through: {attributes: []} // Exclui os atributos da tabela intermediária
                         }
                     ]
-                }],
-                raw: true,
-                nest: true
+                }]
             });
             return user;
         } catch (error) {

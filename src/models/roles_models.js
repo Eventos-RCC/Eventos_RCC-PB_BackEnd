@@ -126,7 +126,7 @@ class UserRole extends Model{
             },
         }, {
             sequelize,
-            tableName: "users_roles",
+            tableName: "user_roles",
             schema: "rcc",
             underscored: true,
             timestamps: false,
