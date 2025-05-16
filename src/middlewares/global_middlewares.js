@@ -2,11 +2,10 @@ import jwt from 'jsonwebtoken';
 import logger from '../utils/logger.config.js';
 
 
-const generateToken = async (userId, levelUser, email) => {
+const generateToken = async (userId, email) => {
     return jwt.sign(
         {
             userId: userId,
-            levelUser: levelUser,
             email: email,
         },
         process.env.SECRETJWT, {
@@ -25,7 +24,6 @@ const jwtRequired = (req, res, next) => {
     try {
         const decoded = jwt.verify(token, process.env.SECRETJWT);
         req.userId = decoded.userId;
-        req.levelUser = decoded.levelUser;
         req.email = decoded.email;
        next();
     } catch (error) {
@@ -34,17 +32,8 @@ const jwtRequired = (req, res, next) => {
     }
 };
 
-const isMaster = async (req, res, next) => {
-    if (req.levelUser !== 'master') {
-        logger.warn('Access denied. User is not a master.');
-        return res.status(403).json({ message: 'Access denied. User not allowed to create events'});
-    }
-    next();
-};
-
 
 export default {
     generateToken,
     jwtRequired,
-    isMaster
 }

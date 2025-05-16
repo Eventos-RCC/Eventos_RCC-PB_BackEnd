@@ -64,7 +64,7 @@ class EventsRepository {
                 ], 
                 where: {
                     status: {
-                        [Sequelize.Op.ne]: 'deleted'
+                        [Sequelize.Op.notIn]: [ 'deleted', 'inactive' ],
                     }
                 }
             });
@@ -131,17 +131,37 @@ class EventsRepository {
         }
     }
 
+    async updateEvents(eventId, body) { 
+        const { name, description, startDate, endDate, event_type, diocese, registration_deadline, max_participants, status } = body;
+        try {
+            const [rowsUpdated, [updatedEvent]] = await Events.update(
+                { name, description, start_date: startDate, end_date: endDate, event_type_id: event_type, diocese_id: diocese, registration_deadline, max_participants, status },
+                {
+                    where: { id: eventId },
+                    returning: true,
+                }
+            );
+            if (rowsUpdated === 0) {
+                throw new CustomError('Event not found', 404);
+            }
+            return this.findEventById(eventId);;
+        } catch (error) {
+            logger.error(`Error updating event in repository: ${error.message}`);
+            throw new CustomError('Error accessing database', 500);
+        }
+    }
+
     async updateOrCreateAdress(event_id, body, adressId) {
-        const { street, number, city, state, zip_code, complement } = body;
+        const { street, number, city, state, zipCode, complement } = body;
         try {
             if (adressId === undefined) {
                 const newAdress = await Adress.create({
-                    type_adress: 'events', event_id, street, number, city, state, zip_code, complement
+                    type_adress: 'events', event_id, street, number, city, state, zip_code: zipCode, complement
                 });
                 return newAdress;
             } else {
                 const [rowsUpdated, [updatedAdress]] = await Adress.update(
-                    { street, number, city, state, zip_code, complement },
+                    { street, number, city, state, zip_code: zipCode, complement },
                     {
                         where: { event_id: event_id, id:  adressId},
                         returning: true,

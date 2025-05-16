@@ -16,13 +16,18 @@ const createEvent = async (body) => {
         throw new CustomError('Missing required fields', 400);
     }
 
-    if (startDate >= endDate) {
+    const StartDateFormated = formatDateForDatabase(startDate);
+    const EndDateFormated = formatDateForDatabase(endDate);
+
+    if (new Date(StartDateFormated).getTime() >= new Date(EndDateFormated).getTime()) {
         logger.error('Start date must be before end time');
         throw new CustomError('Start date must be before end time', 400);
     }
 
-    const StartDateFormated = formatDateForDatabase(startDate);
-    const EndDateFormated = formatDateForDatabase(endDate);
+    if (new Date(StartDateFormated).getTime() < Date.now()) {
+        logger.error('Start date must be in the future');
+        throw new CustomError('Start date must be in the future', 400);
+    }
 
     const dioceseId = await dioceseRepository.findDioceseByName(diocese);
     if (!dioceseId) {
@@ -157,12 +162,83 @@ const updateOrCreateAdressEvent = async (event_id, adress_id, body) => {
             event_id: address.event_id
         }
     };
-};
+}
+
+const updatedEventData = async (event_id, body) => {
+    logger.info('Updating event');
+
+    const event = await eventRepository.findEventById(event_id);
+    if (!event) {
+        logger.error('Event not found or already deleted');
+        throw new CustomError('Event not found or already deleted', 404);
+    }
+
+    const updateFields = {};
+    for (const key in body) {
+        if (body[key] !== undefined && body[key] !== null) {
+            updateFields[key] = body[key];
+        }
+    }
+
+    if (Object.keys(updateFields).length === 0) {
+        logger.error('No fields provided for update');
+        throw new CustomError('No fields provided for update', 400);
+    }
+
+    if (updateFields.startDate && updateFields.endDate) {
+        const StartDateFormated = formatDateForDatabase(updateFields.startDate);
+        const EndDateFormated = formatDateForDatabase(updateFields.endDate);
+        if (new Date(StartDateFormated).getTime() < Date.now()) {
+            logger.error('Start date must be in the future');
+            throw new CustomError('Start date must be in the future', 400);
+        }
+        if (new Date(StartDateFormated).getTime() >= new Date(EndDateFormated).getTime()) {
+            logger.error('Start date must be before end time');
+            throw new CustomError('Start date must be before end time', 400);
+        }
+        updateFields.startDate = StartDateFormated;
+        updateFields.endDate = EndDateFormated;
+    }
+
+    if (updateFields.diocese) {
+        const dioceseId = await dioceseRepository.findDioceseByName(body.diocese);
+        if (!dioceseId) {
+            logger.error('Diocese not found');
+            throw new CustomError('Diocese not found', 400);
+        }
+        updateFields.diocese = dioceseId.diocese_id;
+    }
+
+    if (updateFields.eventType) {
+        const typeEventId = await events_repository.findTypeEvent(body.eventType);
+        if (!typeEventId) {
+            logger.error('Event type not found');
+            throw new CustomError('Event type not found', 400);
+        }
+        updateFields.event_type = typeEventId.id;
+    }
+
+    if (updateFields.registration_deadline) {
+        const registrationDeadlineFormated = formatDateForDatabase(body.registration_deadline);
+        if (new Date(registrationDeadlineFormated).getTime() < Date.now()) {
+            logger.error('Registration deadline must be in the future');
+            throw new CustomError('Registration deadline must be in the future', 400);
+        }
+        updateFields.registration_deadline = registrationDeadlineFormated;
+    }
+
+    const updatedEvent = await eventRepository.updateEvents(event_id, updateFields);
+    return {
+        message: 'Event updated successfully',
+        updatedEvent
+    }
+}
 
 export default {
     createEvent,
     findAllEvents,
     deleteEvent,
     findByIdEvent,
-    updateOrCreateAdressEvent
+    updateOrCreateAdressEvent,
+    updatedEventData
 }

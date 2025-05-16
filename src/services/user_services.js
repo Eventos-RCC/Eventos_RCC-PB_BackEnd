@@ -1,5 +1,6 @@
 import userRepository from '../repositories/user_repository.js';
 import dioceseRepository from '../repositories/diocese_repository.js';
+import rolesRepository from '../repositories/roles_repository.js';
 
 import bcrypt from "bcrypt";
 import globalMiddleware from "../middlewares/global_middlewares.js";
@@ -114,8 +115,8 @@ const confirmVerificationCodeAndCreateUser = async (body, email) => {
   const { name, password, phone, birth, diocese_id} =
     cachedUserData;
 
-  const createdUser = await userRepository.createUser(name, email, password, phone, birth, diocese_id);
-  if (!createdUser) {
+  const newUser = await userRepository.createUser(name, email, password, phone, birth, diocese_id);
+  if (!newUser) {
     logger.error("Error creating user or missing required fields user");
     throw new CustomError(
       "Error Error creating user or missing required fields user",
@@ -126,9 +127,17 @@ const confirmVerificationCodeAndCreateUser = async (body, email) => {
   await redis.delData("User_data", email);
   await redis.delData("verification_code", email);
 
+  const defaultRoleName = await rolesRepository.findRoleByName("registered_user");
+  if (!defaultRoleName) {
+    logger.error("Default role not found");
+    throw new CustomError("Default role not found", 400);
+  }
+  console.log(defaultRoleName);
+
+  await newUser.addRole(defaultRoleName)
+
   const token = await globalMiddleware.generateToken(
-    createdUser.user_id,
-    createdUser.level_user,
+    newUser.user_id,
     email
   );
   if (!token) {
@@ -139,7 +148,7 @@ const confirmVerificationCodeAndCreateUser = async (body, email) => {
   logger.info("User created successfully");
   return {
     message: "Código verificado com Sucesso. Usuário cadastrado: ",
-    user: createdUser,
+    user: newUser,
     token: token,
   };
 };
@@ -168,7 +177,6 @@ const login = async (body) => {
 
   const token = await globalMiddleware.generateToken(
     user.user_id,
-    user.level_user,
     user.email
   );
   if (!token) {
