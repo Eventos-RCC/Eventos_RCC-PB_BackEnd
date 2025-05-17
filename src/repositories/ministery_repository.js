@@ -20,10 +20,10 @@ class MinisteryUserRepository {
     }
   }
 
-  async getMinisteryByAbbreviation(abbreviation) {
+  async getMinisteryByAbbreviation(abbreviations) {
     try {
-      const ministery = await Ministery.findOne({
-        where: { abbreviation: abbreviation },
+      const ministery = await Ministery.findAll({
+        where: { abbreviation: abbreviations },
         attributes: ["id", "name", "abbreviation"],
         raw: true,
       });

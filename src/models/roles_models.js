@@ -27,7 +27,7 @@ class Role extends Model {
             as: "permissions"
         });
         this.belongsToMany(models.User, {
-            through: 'users_roles',
+            through: 'user_roles',
             foreignKey: "role_id", // Chave em UserRole que aponta para Role
             otherKey: "user_id", // Chave em UserRole que aponta para User
             as: "users"
