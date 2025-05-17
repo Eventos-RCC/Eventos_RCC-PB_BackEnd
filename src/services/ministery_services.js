@@ -21,6 +21,10 @@ const findAllMinisteries = async () => {
 const addUserToMinistery = async (userId, body) => { 
   logger.info("Adding user to ministery");
 
+  if (body === undefined) {
+    return { message: "Nenhum ministério seleciionado"}
+  }
+
   const user = await userRepository.findUserById(userId);
   if (!user) {
     logger.error("User not found")
@@ -44,7 +48,6 @@ const addUserToMinistery = async (userId, body) => {
   }
 
   const ministeryIds = ministeries.map(m => m.id);
-  console.log(user)
   const userMinisteries = await user.addMinistery(ministeryIds);
   if (!userMinisteries) {
     logger.error("Erro ao adicionar Ministério do usuáro")
@@ -52,9 +55,8 @@ const addUserToMinistery = async (userId, body) => {
   }
 
   return {
-    message: "Ministérios do usuário",
-    userMinisteries
-  }
+    ministeriesId: userMinisteries.ministeries_id
+  };
 }
 
 const findAllMinisteriesBrAbbreviation = async (abbreviation) => {

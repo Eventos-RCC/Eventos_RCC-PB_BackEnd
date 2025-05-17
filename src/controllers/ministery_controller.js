@@ -28,8 +28,8 @@ const addUserToMinistery = async (req, res) => {
   const body = req.body;
 
   try {
-    await ministeriesServices.addUserToMinistery(userId, body);
-    return res.status(200).send({ message: "User added to ministery successfully" });
+    const userMinisteries = await ministeriesServices.addUserToMinistery(userId, body);
+    return res.status(200).send({ message: "User added to ministery successfully", userMinisteries });
   }
   catch (err) {
     const statusCode = err.statusCode || 500;
