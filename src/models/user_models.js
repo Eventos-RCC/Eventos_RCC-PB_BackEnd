@@ -36,13 +36,14 @@ class User extends Model {
         });
         this.belongsToMany(models.Ministery, {
             through: 'user_ministeries',
-            foreignKey: "user_id",
-            as: "ministeries"
+            foreignKey: 'user_id',
+            otherKey: 'ministeries_id',
+            as: 'ministeries'
         });
         this.belongsToMany(models.Role, {
             through: 'user_roles',
             foreignKey: "user_id", // Chave em UserRole que aponta para User
-            outherKey: "role_id", // Chave em UserRole que aponta para Role
+            otherKey: "role_id", // Chave em UserRole que aponta para Role
             as: "roles"
         })
     }

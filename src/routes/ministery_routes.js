@@ -4,7 +4,9 @@ import globalMiddlewares from '../middlewares/global_middlewares.js';
 
 const ministeryRoute = Router();
 
+ministeryRoute.post('/', globalMiddlewares.jwtRequired, ministeryController.addUserToMinistery);
 ministeryRoute.get('/', globalMiddlewares.jwtRequired, ministeryController.getAllMinisteries);
 ministeryRoute.get('/:abbreviation', globalMiddlewares.jwtRequired, ministeryController.getMinisteriesByAbbreviation);
+
 
 export default ministeryRoute;

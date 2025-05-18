@@ -21,7 +21,8 @@ class Ministery extends Model {
     static associate(models) { 
         this.belongsToMany(models.User, {
             through: 'user_ministeries',
-            foreignKey: 'userId',
+            foreignKey: 'ministeries_id',
+            otherKey: 'user_id',
             as: 'users'
         });
     }

@@ -23,8 +23,23 @@ const getMinisteriesByAbbreviation = async (req, res) => {
   }
 }
 
+const addUserToMinistery = async (req, res) => {
+  const userId = req.userId;
+  const body = req.body;
+
+  try {
+    const userMinisteries = await ministeriesServices.addUserToMinistery(userId, body);
+    return res.status(200).send({ message: "User added to ministery successfully", userMinisteries });
+  }
+  catch (err) {
+    const statusCode = err.statusCode || 500;
+    return res.status(statusCode).send({ message: err.message });
+  }
+}
+
 
 export default {
   getAllMinisteries,
-  getMinisteriesByAbbreviation
+  getMinisteriesByAbbreviation, 
+  addUserToMinistery
 }
