@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node index.js",
     "dev": "node --watch index.js",
+    "dev:queue": "node --watch src/Queue.js",
     "load-migration-docker": "docker exec -it eventos-rcc npx sequelize-cli db:migrate",
     "load-migration": "npx sequelize-cli db:migrate",
     "create-migration": "npx sequelize-cli migration:create --name",
@@ -17,6 +18,7 @@
   "type": "module",
   "dependencies": {
     "bcrypt": "^5.1.1",
+    "bull": "^4.16.5",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^5.1.0",

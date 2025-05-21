@@ -6,12 +6,12 @@ import bcrypt from "bcrypt";
 import globalMiddleware from "../middlewares/global_middlewares.js";
 import redis from "../models/redis_models.js";
 
-import emailUtils from "../utils/emailUtils.js";
 import logger from "../utils/logger.config.js";
 import CustomError from "../utils/CustomError.js";
 import { formatDateForDatabase } from "../utils/basicFunctions.js";
 import { sendVerificationCodeToRedis, verify_code } from "../utils/functionsToRedis.js";
 
+import Queue from '../jobs/lib/queue.js';
 
 const initiateUserRegistration = async (body) => {
   logger.info("Initiating user registration process");
@@ -71,10 +71,7 @@ const initiateUserRegistration = async (body) => {
   }
 
   logger.info("Verification code sent to email");
-  await emailUtils.sendCodeToEmail(
-    email,
-    verificationCodeSend
-  );
+  await Queue.add('VerificationCodeEmail', { email, code: verificationCodeSend }, {priority: 4});
 
   return { message: "Código enviado para o email", email };
 };
@@ -91,7 +88,7 @@ const confirmVerificationCodeAndCreateUser = async (body, email) => {
     }
 
     logger.info("Verification code sent to email");
-    await emailUtils.sendCodeToEmail(email, verificationCodeSend);
+    await Queue.add('VerificationCodeEmail', { email, code: verificationCodeSend }, { priority: 3 });
     return { message: "Código enviado para o email", email };
   }
 
