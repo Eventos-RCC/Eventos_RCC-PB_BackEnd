@@ -1,21 +1,41 @@
 import Queue from 'bull';
-import { client } from '../../database/redis.js';
 import * as jobs from '../index.js';
 import logger from '../../utils/logger.config.js';
 
+const redisConfig = process.env.REDIS_URL;
+
 // Transformar os jobs em um array de objetos de fila
-const queues = Object.values(jobs).map(job => ({
-    bull: new Queue(job.key, client, {
-        attempts: 5,               // Número de tentativas
-        backoff: {
-            type: 'exponential',   // Tipo de backoff
-            delay: 1000            // Delay inicial em ms
-        },
-    }),
-    name: job.key,
-    handle: job.handle,
+const queues = Object.values(jobs).map(job => {
+    logger.info(`Creating queue: ${job.key}`);
+    const bullQueue = new Queue(job.key, redisConfig, {
+        defaultJobOptions: {
+            removeOnComplete: true, // Remove jobs concluídos
+            removeOnFail: true,      // Remove jobs falhados
+            attempts: 5,               // Número de tentativas
+            backoff: {
+                type: 'exponential',   // Tipo de backoff
+                delay: 1000            // Delay inicial em ms
+            },
+            timeout: 60000, // Tempo limite para o job em ms
+        }
+    });
     
-}));
+    bullQueue.on('error', (error) => {
+        logger.error(`Queue error: ${job.key} - ${error.message}`);
+    });
+
+    bullQueue.isReady().then(() => {
+        logger.info(`Bull queue ${job.key} is ready and connected to Redis.`);
+    }).catch((error) => {
+        logger.error(`Bull queue ${job.key} failed to connect to Redis:`, error);
+    });
+
+    return {
+        name: job.key,
+        bull: bullQueue,
+        handle: job.handle
+    };  
+});
 
 export default {
     queues,

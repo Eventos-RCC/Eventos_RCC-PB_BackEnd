@@ -2,6 +2,8 @@ import "dotenv/config";
 import app from "./app.js";
 import cors from "cors";
 
+import './src/jobs/init.js';
+
 // Configuração de CORS
 const corsOptions = {
   origin: process.env.CORS_ORIGIN?.split(",") || ["http://localhost:8080"],
