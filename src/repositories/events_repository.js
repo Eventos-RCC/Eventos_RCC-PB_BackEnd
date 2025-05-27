@@ -44,27 +44,23 @@ class EventsRepository {
 
     async findAllEvents() {
         try {
-            const events =  await Events.findAll({
+            const events = await Events.findAll({
+                attributes: ['id', 'name', 'description', 'start_date', 'end_date', 'status'],
                 include: [
                     {
                         model: Diocese,
                         as: 'diocese',
-                        attributes: ['diocese_id', 'name'],
+                        attributes: ['name'],
                     },
                     {
                         model: TypeEvents,
                         as: 'event_types',
-                        attributes: ['id', 'name'],
+                        attributes: ['name'],
                     },
-                    {
-                        model: Adress,
-                        as: 'adresses',
-                        attributes: ['id', 'street', 'number', 'city', 'state', 'zip_code', 'complement'],
-                    }
                 ], 
                 where: {
                     status: {
-                        [Sequelize.Op.notIn]: [ 'deleted', 'inactive' ],
+                        [Sequelize.Op.notIn]: [ 'deleted' ], // inactivity
                     }
                 }
             });

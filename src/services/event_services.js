@@ -5,7 +5,7 @@ import eventRepository from '../repositories/events_repository.js';
 import logger from '../utils/logger.config.js';
 import CustomError from '../utils/CustomError.js';
 import events_repository from '../repositories/events_repository.js';
-import { formatDateForDatabase} from '../utils/basicFunctions.js';
+import { formatDateForDatabase, formatDateForUser} from '../utils/basicFunctions.js';
 
 const createEvent = async (body) => {
     logger.info('Creating event');
@@ -76,11 +76,18 @@ const findAllEvents = async () => {
         throw new CustomError('No events found', 404);
     }
 
+    const mappedEvents = events.map(event => ({
+        id: event.id,
+        name: event.name,
+        description: event.description,
+        diocese: event.diocese.name,
+        eventType: event.event_types.name,
+        startDate: formatDateForUser(event.start_date),
+        endDate: formatDateForUser(event.end_date),
+    }));
+
     logger.info('Events fetched successfully');
-    return {
-        message: 'Events fetched successfully',
-        events: events
-    };
+    return mappedEvents
 }
 
 const deleteEvent = async (event_id) => {
