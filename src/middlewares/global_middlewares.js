@@ -9,13 +9,13 @@ const generateToken = async (userId, email) => {
             email: email,
         },
         process.env.SECRETJWT, {
-            expiresIn: 43200 // 12 hours
+            expiresIn: 21600 // 6 hours
         }
     );
 };
 
 const jwtRequired = (req, res, next) => {
-    const token = req.header('authorization')?.split(' ')[1];
+    const token = req.cookies.jwt;
     if (!token) {
         logger.warn('Access denied. No token provided.');
         return res.status(401).json({ message: 'Access denied. No token provided.' });
@@ -25,10 +25,27 @@ const jwtRequired = (req, res, next) => {
         const decoded = jwt.verify(token, process.env.SECRETJWT);
         req.userId = decoded.userId;
         req.email = decoded.email;
+
+        logger.debug(`Token verified for userId: ${req.userId}, email: ${req.email}`);
+
        next();
     } catch (error) {
-        logger.error('Invalid token.');
-        return res.status(401).json({ message: 'Invalid token.' });
+        if (error.name === 'JsonWebTokenError') {
+            logger.warn(`Token JWT inválido recebido: ${error.message}`);
+
+            res.clearCookie('jwt', { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'Lax', path: '/' } );
+            return next(new CustomError('Sessão inválida. Por favor, faça login novamente.', 401));
+        } 
+        
+        if (error.name === 'TokenExpiredError') {
+            logger.info(`Token JWT expirado para usuário.`);
+            
+            res.clearCookie('jwt', { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'Lax', path: '/' } );
+            return next(new CustomError('Sua sessão expirou. Por favor, faça login novamente.', 401));
+        }
+            
+        logger.error(`Erro inesperado na verificação do JWT: ${error.message}`);
+        return next(new CustomError('Erro interno durante a autenticação.', 500));
     }
 };
 
