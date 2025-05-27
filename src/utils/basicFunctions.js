@@ -11,4 +11,9 @@ const formatDateForDatabase = (dateString) => {
   return `${year}-${month}-${day}`; // Retorna no formato yyyy-mm-dd
 };
 
-export { formatDateForDatabase, generateCodeValdation };
+const formatDateForUser = (dateString) => {
+  const [year, month, day] = dateString.split("-");
+  return `${day}/${month}/${year}`; // Retorna no formato dd/mm/yyyy
+};
+
+export { formatDateForDatabase, generateCodeValdation, formatDateForUser };
