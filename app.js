@@ -1,5 +1,6 @@
 import express from "express";
 import dotenv from "dotenv";
+import cookieParser from "cookie-parser";
 
 import { conectDataBase } from "./src/database/db.js";
 import { connectRedis } from "./src/database/redis.js";
@@ -12,7 +13,7 @@ conectDataBase();
 connectRedis();
 
 app.use(express.json());
-
+app.use(cookieParser());
 app.use('/api', mainRouter);
 
 export default app;
