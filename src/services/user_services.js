@@ -185,6 +185,7 @@ const login = async (body) => {
   return {
     message: "Login successful",
     token: token,
+    userName: user.username,
   };
 };
 

@@ -51,7 +51,7 @@ const login = async (req, res) => {
             path: '/'
         });
 
-        return res.status(200).send(result.message);
+        return res.status(200).send({ message: result.message, userName: result.userName });
     }catch (err) {
         const statusCode = err.statusCode || 500;
         return res.status(statusCode).send({ message: err.message });
