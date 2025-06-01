@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import logger from '../utils/logger.config.js';
+import CustomError from '../utils/CustomError.js';
 
 
 const generateToken = async (userId, email) => {
@@ -26,7 +27,7 @@ const jwtRequired = (req, res, next) => {
         req.userId = decoded.userId;
         req.email = decoded.email;
 
-        logger.debug(`Token verified for userId: ${req.userId}, email: ${req.email}`);
+        logger.debug(`Token verified sucessfully`);
 
        next();
     } catch (error) {
