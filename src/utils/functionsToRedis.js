@@ -17,7 +17,7 @@ const sendVerificationCodeToRedis = async (email) => {
     "verification_code",
     email,
     ditc_code,
-    300
+    600
   );
   if (!result) {
     logger.error("Error saving verification code to Redis");

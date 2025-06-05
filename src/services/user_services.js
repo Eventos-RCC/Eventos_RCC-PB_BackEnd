@@ -1,16 +1,17 @@
 import userRepository from '../repositories/user_repository.js';
 import dioceseRepository from '../repositories/diocese_repository.js';
+import rolesRepository from '../repositories/roles_repository.js';
 
 import bcrypt from "bcrypt";
 import globalMiddleware from "../middlewares/global_middlewares.js";
 import redis from "../models/redis_models.js";
 
-import emailUtils from "../utils/emailUtils.js";
 import logger from "../utils/logger.config.js";
 import CustomError from "../utils/CustomError.js";
 import { formatDateForDatabase } from "../utils/basicFunctions.js";
 import { sendVerificationCodeToRedis, verify_code } from "../utils/functionsToRedis.js";
 
+import Queue from '../jobs/lib/queue.js';
 
 const initiateUserRegistration = async (body) => {
   logger.info("Initiating user registration process");
@@ -27,8 +28,8 @@ const initiateUserRegistration = async (body) => {
     throw new CustomError("Email already registered", 409);
   }
 
-  const diocese_id = await dioceseRepository.findDioceseByName(diocese);
-  if (!diocese_id) {
+  const dioceseId = await dioceseRepository.findDioceseByName(diocese);
+  if (!dioceseId) {
     logger.error("Diocese not found");
     throw new CustomError("Diocese not found", 400);
   }
@@ -40,15 +41,15 @@ const initiateUserRegistration = async (body) => {
     throw new Error("Password must be between 6 and 20 characters", 400);
   }
 
-  const hashed_password = await bcrypt.hash(password, 10);
+  const hashedPassword = await bcrypt.hash(password, 10);
 
   const userDataToCache = {
     name,
     email,
-    password: hashed_password,
+    password: hashedPassword,
     phone,
     birth: formattedBirthDate,
-    diocese_id: diocese_id.diocese_id
+    diocese_id: dioceseId.diocese_id
   };
 
   logger.info("Saving data to Redis");
@@ -70,10 +71,7 @@ const initiateUserRegistration = async (body) => {
   }
 
   logger.info("Verification code sent to email");
-  await emailUtils.sendCodeToEmail(
-    email,
-    verificationCodeSend
-  );
+  await Queue.add('VerificationCodeEmail', { email, code: verificationCodeSend }, {priority: 4});
 
   return { message: "Código enviado para o email", email };
 };
@@ -90,7 +88,7 @@ const confirmVerificationCodeAndCreateUser = async (body, email) => {
     }
 
     logger.info("Verification code sent to email");
-    await emailUtils.sendCodeToEmail(email, verificationCodeSend);
+    await Queue.add('VerificationCodeEmail', { email, code: verificationCodeSend }, { priority: 3 });
     return { message: "Código enviado para o email", email };
   }
 
@@ -114,8 +112,8 @@ const confirmVerificationCodeAndCreateUser = async (body, email) => {
   const { name, password, phone, birth, diocese_id} =
     cachedUserData;
 
-  const createdUser = await userRepository.createUser(name, email, password, phone, birth, diocese_id);
-  if (!createdUser) {
+  const newUser = await userRepository.createUser(name, email, password, phone, birth, diocese_id);
+  if (!newUser) {
     logger.error("Error creating user or missing required fields user");
     throw new CustomError(
       "Error Error creating user or missing required fields user",
@@ -126,9 +124,17 @@ const confirmVerificationCodeAndCreateUser = async (body, email) => {
   await redis.delData("User_data", email);
   await redis.delData("verification_code", email);
 
+  const defaultRoleName = await rolesRepository.findRoleByName("registered_user");
+  if (!defaultRoleName) {
+    logger.error("Default role not found");
+    throw new CustomError("Default role not found", 400);
+  }
+  console.log(defaultRoleName);
+
+  await newUser.addRole(defaultRoleName)
+
   const token = await globalMiddleware.generateToken(
-    createdUser.user_id,
-    createdUser.level_user,
+    newUser.user_id,
     email
   );
   if (!token) {
@@ -139,7 +145,7 @@ const confirmVerificationCodeAndCreateUser = async (body, email) => {
   logger.info("User created successfully");
   return {
     message: "Código verificado com Sucesso. Usuário cadastrado: ",
-    user: createdUser,
+    user: newUser,
     token: token,
   };
 };
@@ -168,7 +174,6 @@ const login = async (body) => {
 
   const token = await globalMiddleware.generateToken(
     user.user_id,
-    user.level_user,
     user.email
   );
   if (!token) {
@@ -180,6 +185,7 @@ const login = async (body) => {
   return {
     message: "Login successful",
     token: token,
+    userName: user.username,
   };
 };
 
@@ -199,7 +205,7 @@ const findUserData = async (userId) => {
   }
 }
 
-const updateOrCreateAdress = async (user_id, adress_id, body) => {
+const updateOrCreateAdress = async (userId, adressId, body) => {
   logger.info('Updating or creating address for user');
 
   if (Object.keys(body).length === 0) {
@@ -207,7 +213,7 @@ const updateOrCreateAdress = async (user_id, adress_id, body) => {
     throw new CustomError('No fields provided for update', 400);
   }
 
-  const user = await userRepository.findUserById(user_id);
+  const user = await userRepository.findUserById(userId);
   if (!user) {
     logger.error("User not found")
     throw new CustomError('User not found', 404);
@@ -216,21 +222,21 @@ const updateOrCreateAdress = async (user_id, adress_id, body) => {
   const { street, number, city, state, zip_code, complement } = body;
 
   let address;
-  if (!adress_id) {
+  if (!adressId) {
     if (!street || !number || !city || !state || !zip_code) {
       logger.error('Missing required fields');
       throw new CustomError('Missing required fields', 400);
     }
 
-    address = await userRepository.updateOrCreateUserAdress(user_id, body, adress_id);
+    address = await userRepository.updateOrCreateUserAdress(userId, body, adressId);
     logger.info("Address created successfully")
   } else {
-    address = await userRepository.updateOrCreateUserAdress(user_id, body, adress_id);
+    address = await userRepository.updateOrCreateUserAdress(userId, body, adressId);
     logger.info("Address updated successfully")
   }
 
   return {
-    message: adress_id ? 'Address created successfully' : 'Address updated successfully',
+    message: adressId ? 'Address created successfully' : 'Address updated successfully',
     addres: {
       id: address.id,
       street: address.street,

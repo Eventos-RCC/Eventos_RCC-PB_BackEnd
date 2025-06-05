@@ -2,7 +2,7 @@ import {client} from '../database/redis.js';
 
 const dataSave = async (prefix, key, value, ttl) => {
     await client.SET(`${prefix}:${key}`, JSON.stringify(value));
-    await client.EXPIRE(`${prefix}:${key}`, ttl); // 20 minutos
+    await client.EXPIRE(`${prefix}:${key}`, ttl); 
     return true;
 };
 

@@ -1,6 +1,7 @@
 import User from '../models/user_models.js';
 import Diocese from '../models/diocese_models.js';
 import Adress from '../models/adresses_models.js';
+import { Role, Permission } from '../models/roles_models.js';
 
 import CustomError from '../utils/CustomError.js';
 import logger from '../utils/logger.config.js';
@@ -11,7 +12,6 @@ class UserRepository {
         try {
             return await User.create({username, email, password, phone, birth_date, diocese_id,});
         } catch (error) {
-            console.log('Erro ao criar usuário:', error);
             logger.error('Error creating user:', error);
 
             if (error.name === 'SequelizeUniqueConstraintError') {
@@ -56,9 +56,19 @@ class UserRepository {
                     model: Adress,
                     as: 'adresses',
                     attributes: ['id', 'street', 'number', 'city', 'state', 'zip_code', 'complement']
-                }],
-                raw: true,
-                nest: true
+                }, {
+                    model: Role,
+                    as: 'roles',
+                    attributes: ['id', 'name'],
+                    include: [
+                        {
+                            model: Permission,
+                            as: 'permissions',
+                            attributes: ['id', 'action', 'resource'],
+                            through: {attributes: []} // Exclui os atributos da tabela intermediária
+                        }
+                    ]
+                }]
             });
             return user;
         } catch (error) {

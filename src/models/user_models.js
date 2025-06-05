@@ -13,11 +13,6 @@ class User extends Model {
             password: DataTypes.STRING,
             phone: DataTypes.STRING,
             birth_date: DataTypes.DATEONLY,
-            level_user: {
-                type: DataTypes.ENUM,
-                values: ["master", "admin", "user"],
-                defaultValue: "user",
-            },
         }, {
             sequelize: connection,
             tableName: "users",
@@ -39,6 +34,18 @@ class User extends Model {
             foreignKey: "user_id",
             as: "adresses"
         });
+        this.belongsToMany(models.Ministery, {
+            through: 'user_ministeries',
+            foreignKey: 'user_id',
+            otherKey: 'ministeries_id',
+            as: 'ministeries'
+        });
+        this.belongsToMany(models.Role, {
+            through: 'user_roles',
+            foreignKey: "user_id", // Chave em UserRole que aponta para User
+            otherKey: "role_id", // Chave em UserRole que aponta para Role
+            as: "roles"
+        })
     }
 }
 
